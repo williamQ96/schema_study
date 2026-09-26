@@ -70,18 +70,18 @@
     },
     {
       "path": "docs/schema_study_deployment_guide_zh.md",
-      "bytes": 12803,
-      "sha256_file_bytes": "3618db1b2aaa9040669440bf185e0c2ee427a9a85ba84a728001e44d17054379"
+      "bytes": 12867,
+      "sha256_file_bytes": "d9b948b038c69d27b231cb1d5eabf24a8160b376c6ce2eb4b32aaf0c05c74285"
     },
     {
       "path": "README.md",
-      "bytes": 4270,
-      "sha256_file_bytes": "dc01365617621413d71ba73f1b962f061cd41c07a069dfd931bdf1997941fff1"
+      "bytes": 5017,
+      "sha256_file_bytes": "e1fd2c5388c546d136fc7210c1ab3116d9d5ebf8049a399a653b1d5d7191dc6e"
     },
     {
       "path": "docs/schema_study_user_guide_zh.md",
-      "bytes": 18576,
-      "sha256_file_bytes": "0cd944f44ef3a0788162cdfce908147a4953a6603241833983dc805322d30dde"
+      "bytes": 18634,
+      "sha256_file_bytes": "c6b2325fdf57873e536bef93f9a852d23314ccd31b1f376fff230c1e2a033aa5"
     },
     {
       "path": "high_fidelity_schema_study/extractors/__init__.py",
@@ -367,6 +367,26 @@
       "path": "high_fidelity_schema_study/unit_normalization.py",
       "bytes": 3229,
       "sha256_file_bytes": "b60f02a6eff1750377b8f6f46d75b506e3c38d2cbc67afce8c809891ca59d9dd"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "bytes": 4311,
+      "sha256_file_bytes": "2463073d90440c575cdb95f4515eb9da5f32eade7ad02ec73c6638f632189674"
+    },
+    {
+      "path": "docs/release_notes_v0.1.0_zh.md",
+      "bytes": 1867,
+      "sha256_file_bytes": "58c4e15c057236ede76196884c404a313c54187c3a80a02f37eff1d1db6215d3"
+    },
+    {
+      "path": "docs/schema_study_deployment_guide.md",
+      "bytes": 14706,
+      "sha256_file_bytes": "dc84d3c394ec100bf14a509b21659a49cb6d39d0c46e4073ed8740e206887c10"
+    },
+    {
+      "path": "docs/schema_study_user_guide.md",
+      "bytes": 18564,
+      "sha256_file_bytes": "989dabec26b97e741e66015a872883241ac383f1897f0591d05f2510029d6b4f"
     }
   ]
 }

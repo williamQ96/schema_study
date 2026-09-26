@@ -1,5 +1,7 @@
 # 部署指南：Docker Hub → Apptainer → Mercury
 
+[English](schema_study_deployment_guide.md) | **简体中文**
+
 本指南使用公开仓库 `williamQ96/schema_study` 的目录结构。日常输入准备和 packet 操作见[使用指南](schema_study_user_guide_zh.md)。所有 shell 示例按 Linux/Bash 编写。
 
 ## 1. 部署内容及机器要求

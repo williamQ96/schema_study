@@ -1,25 +1,28 @@
 # Schema Study
 
+**English** | [简体中文](README.zh-CN.md)
+
 Paper–dataset schema evidence pipeline: **structure, encoding, value, syntax**.
 
-论文侧保留 layout-aware 全文，冻结共享分类索引和任务规范，供三个可替换的本地模型及一个 frontier soft reference 使用。Dataset 侧由格式解析器独立生成四类证据。两条路径在 evaluation packet 汇合，终点是完整性与来源验证；soft reference 不作为 gold，验证通过也不代表语义准确率。
+The paper workflow retains the full layout-aware text and freezes a shared classification index and task specification for three interchangeable local models and one frontier soft reference. The dataset workflow independently produces evidence through format parsers. Both paths meet in an evaluation packet, ending at an integrity and provenance gate. A soft reference is fallible; passing this gate does not establish semantic accuracy.
 
-## 从这里开始
+## Start here
 
-| 任务 | 文档 |
+| Task | Documentation |
 | --- | --- |
-| 跑通示例、准备 paper/dataset、创建 corpus、运行与验证 packet | [使用指南](docs/schema_study_user_guide_zh.md) |
-| 在 Mercury 部署、下载镜像、转为 Apptainer、选择模型及冻结配置 | [部署指南](docs/schema_study_deployment_guide_zh.md) |
+| Run the demo, prepare paper/dataset inputs, build a corpus, run jobs and verify packets | [User guide](docs/schema_study_user_guide.md) |
+| Deploy on Mercury, obtain a Docker/Apptainer image, select models and freeze a configuration | [Deployment guide](docs/schema_study_deployment_guide.md) |
+| Read the documentation in Chinese | [中文首页](README.zh-CN.md) · [使用指南](docs/schema_study_user_guide_zh.md) · [部署指南](docs/schema_study_deployment_guide_zh.md) |
 
 - GitHub: [williamQ96/schema_study](https://github.com/williamQ96/schema_study)
 - Docker Hub: [plalelab/schema-study](https://hub.docker.com/r/plalelab/schema-study)
-- 镜像版本：`plalelab/schema-study:0.1.0-cuda13`（Linux amd64）
-- 发布验证及镜像 digest：见 [Releases](https://github.com/williamQ96/schema_study/releases)。
-- 本版软件验收：[113 项 Linux 容器测试通过及完整离线流程记录](docs/release-validation-v0.1.0.json)。
+- Image: `plalelab/schema-study:0.1.0-cuda13` (Linux amd64)
+- Image digest and release records: [Releases](https://github.com/williamQ96/schema_study/releases).
+- Release validation: [113 passing Linux container tests and the complete offline workflow](docs/release-validation-v0.1.0.json).
 
-## 五分钟离线检查
+## Five-minute offline check
 
-以下 Linux/Bash 示例不需要 GPU、模型权重或 API key，也不会调用模型。
+This Linux/Bash example needs no GPU, model weights or API key, and makes no model calls.
 
 ```bash
 docker pull plalelab/schema-study:0.1.0-cuda13
@@ -30,27 +33,27 @@ docker run --rm \
   offline-demo --output /outputs/demo-v1
 ```
 
-成功后查看 `schema-study-results/demo-v1/report.json`。示例使用合成材料和模拟后端，覆盖三模型重复、独立分类器、soft reference、断点续跑及 packet 验证。再次做完整 demo 时使用新目录；实际批次续跑使用同一个 batch 目录。
+Read `schema-study-results/demo-v1/report.json` after completion. The demo uses synthetic inputs and mock backends to exercise repeated local-model slots, a separate classifier role, a soft reference, resume behavior and packet verification. Use a new directory for another complete demo; resume an actual batch in its existing batch directory.
 
-## 仓库结构
+## Repository layout
 
 ```text
 high_fidelity_schema_study/
-  four_category/         # 任务、模型适配器、dataset、批次、packet、Mercury
-  extractors/            # 格式解析插件
-  config/                # 共享实验规范及尚未选定真实模型的示例配置
-  templates/             # 原文 prompt、taxonomy、输出 JSON schema
+  four_category/         # Tasks, model adapters, datasets, batches, packets, Mercury
+  extractors/            # Format parser plugins
+  config/                # Shared specification and draft model configurations
+  templates/             # Exact prompts, taxonomy and output JSON schemas
 container/
-  docker/                # 可构建的 OCI 镜像
-  apptainer/             # SIF 配方、构建与安全挂载启动器
-docs/                    # 使用和部署文档
-tests/                   # 合成/模拟软件测试
-source-export-manifest.json # 发布源码文件字节 SHA-256
+  docker/                # OCI image recipe
+  apptainer/             # SIF recipe, build script and bind-mount launcher
+docs/                    # English guides and optional Chinese translations
+tests/                   # Synthetic and mock software tests
+source-export-manifest.json # File-byte SHA-256 inventory for the current export
 ```
 
-本仓库是四类流程的可运行源码发行包。原始论文、dataset、模型权重、API 凭据和历史实验结果由使用者在外部目录管理。源码 export manifest 覆盖其列出的文件，发布后增加的 CI 或 release 元数据不隐含在该清单内。
+This repository distributes the runnable four-category workflow. Users manage original papers, datasets, model weights, API credentials and historical results in external directories. The export manifest covers only its listed files; CI and release metadata are not implicitly included. The original v0.1.0 inventory remains available in its tag and release assets.
 
-## 本地开发与测试
+## Local development and tests
 
 ```bash
 git clone https://github.com/williamQ96/schema_study.git
@@ -62,13 +65,13 @@ python -m pytest -q tests
 python -m high_fidelity_schema_study.four_category.cli --help
 ```
 
-离线依赖足以运行 parser、mock demo 和软件测试。真实 Transformers 推理依赖 Linux CUDA 镜像中的额外运行库。
+The offline dependencies support parsing, mock demos and software tests. Real Transformers inference also requires the additional runtime libraries in the Linux CUDA image.
 
-## 当前能力与实验状态
+## Capabilities and experiment status
 
-- Dataset 格式：CSV/TSV、JSON/JSONL、XML/XSD、HDF5、NetCDF、Parquet、Zarr v2、ARFF、XLSX；读取范围和 declared/observed/inferred/unknown 分开记录。
-- 模型后端：Transformers、OpenAI-compatible Chat Completions、Responses。模型选择由 profile 决定；无法支持的参数会明确拒绝。
-- `run` 经过模型、源码、SIF、checkpoint 和硬件门禁；输入与结果保留来源身份，失败按任务隔离。
-- Mercury 目标为 4×H200 NVL；其实际 GPU、驱动、模型上下文和吞吐仍需在该机器上 qualification。软件离线通过不能替代硬件或研究效果验证。
-- 当前 runner 串行调度；三个本地模型默认各三次重复。重复用于描述变异，不能宣称消除模型偏差或随机性。
-- 公开示例配置是 draft，占位模型不能启动正式实验。没有执行新的模型实验，也没有生成真人标签。
+- Dataset formats: CSV/TSV, JSON/JSONL, XML/XSD, HDF5, NetCDF, Parquet, Zarr v2, ARFF and XLSX. Evidence records distinguish declared, observed, inferred and unknown facts and retain the reading scope.
+- Model backends: Transformers, OpenAI-compatible Chat Completions and Responses. Profiles select the models; unsupported parameters are explicitly rejected.
+- `run` verifies the model configuration, source code, SIF, checkpoint and hardware before dispatch. Sources and results retain their identities, and failures are isolated per task.
+- Mercury targets 4×H200 NVL. Its actual GPUs, driver, model context limits and throughput still require qualification on that machine. Offline software validation does not establish hardware readiness or research effectiveness.
+- The current runner is serial, with three repetitions per local model by default. Repetitions describe variation; they do not eliminate model bias or randomness.
+- Example profiles remain drafts. Placeholder models cannot launch a formal experiment. This release did not execute new model experiments or produce human annotations.

@@ -1,5 +1,7 @@
 # Schema Study 用户指南（中文）
 
+[English](schema_study_user_guide.md) | **简体中文**
+
 本指南介绍如何把论文 PDF 和数据文件组织成可追溯的四类别研究输入，并在 Mercury 容器中运行离线准备、硬件预检、冻结配置后的模型调用与结果核验。论文与数据集是两条独立输入路径：数据文件由确定性解析器处理，不会进入论文分类或抽取请求。
 源码：[GitHub v0.1.0 release](https://github.com/williamQ96/schema_study/releases/tag/v0.1.0)；OCI 镜像：[Docker Hub `plalelab/schema-study:0.1.0-cuda13`](https://hub.docker.com/r/plalelab/schema-study/tags?name=0.1.0-cuda13)。版本、取得 SIF、挂载和硬件预检见[部署指南](schema_study_deployment_guide_zh.md)。
 
