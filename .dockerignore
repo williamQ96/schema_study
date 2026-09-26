@@ -1,0 +1,17 @@
+**
+!requirements.txt
+!requirements-phase1-paper-to-schema.txt
+!requirements-phase1-inference.txt
+!requirements_four_category_offline.txt
+!high_fidelity_schema_study/
+!high_fidelity_schema_study/**
+!container/
+!container/docker/
+!container/docker/Dockerfile
+!container/docker/entrypoint.sh
+**/__pycache__/**
+**/*.pyc
+**/.env*
+**/.netrc
+**/credentials*
+**/token

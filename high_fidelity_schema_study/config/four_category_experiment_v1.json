@@ -1,0 +1,130 @@
+{
+  "schema_version": "four-category-experiment/v1",
+  "experiment_id": "dual-source-four-category-draft-v1",
+  "status": "draft",
+  "inference_enabled": false,
+  "taxonomy_path": "templates/four_category_taxonomy_v1.json",
+  "profiles": [
+    {
+      "profile_id": "local_1-unselected-v1",
+      "backend": "transformers",
+      "model_id": "UNSELECTED",
+      "revision": null,
+      "deployment": "local",
+      "endpoint": null,
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [],
+        "supports_system_role": true
+      },
+      "runtime": {},
+      "status": "draft"
+    },
+    {
+      "profile_id": "local_2-unselected-v1",
+      "backend": "transformers",
+      "model_id": "UNSELECTED",
+      "revision": null,
+      "deployment": "local",
+      "endpoint": null,
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [],
+        "supports_system_role": true
+      },
+      "runtime": {},
+      "status": "draft"
+    },
+    {
+      "profile_id": "local_3-unselected-v1",
+      "backend": "transformers",
+      "model_id": "UNSELECTED",
+      "revision": null,
+      "deployment": "local",
+      "endpoint": null,
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [],
+        "supports_system_role": true
+      },
+      "runtime": {},
+      "status": "draft"
+    },
+    {
+      "profile_id": "frontier_reference-unselected-v1",
+      "backend": "responses",
+      "model_id": "UNSELECTED",
+      "revision": null,
+      "deployment": "remote",
+      "endpoint": null,
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [],
+        "supports_system_role": true
+      },
+      "runtime": {},
+      "status": "draft"
+    }
+  ],
+  "roles": {
+    "locals": [
+      "local_1-unselected-v1",
+      "local_2-unselected-v1",
+      "local_3-unselected-v1"
+    ],
+    "soft_reference": "frontier_reference-unselected-v1"
+  },
+  "classification": {
+    "profile_id": null,
+    "profile_sha256": null,
+    "parameters": {
+      "temperature": 0.0,
+      "max_output_tokens": 16384
+    }
+  },
+  "local_parameters": {
+    "do_sample": true,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "repetition_penalty": 1.0,
+    "max_output_tokens": 16384
+  },
+  "reference_parameters": {
+    "max_output_tokens": 16384
+  },
+  "replicates": [
+    {
+      "replicate_id": 1,
+      "seed": 1729
+    },
+    {
+      "replicate_id": 2,
+      "seed": 2718
+    },
+    {
+      "replicate_id": 3,
+      "seed": 3141
+    }
+  ],
+  "dataset_parser": {
+    "sample_limit": 200
+  },
+  "execution": {
+    "max_attempts": 2,
+    "retry_statuses": [
+      "transport_error"
+    ],
+    "concurrency_per_backend": 1
+  },
+  "notes": [
+    "All numeric controls are editable draft proposals, not executed new-experiment settings.",
+    "Classifier deployment must be explicitly selected and remains independently bound.",
+    "Context value 1 is a nonoperational sentinel: replace it from model qualification before freeze.",
+    "No model, hardware, enlarged corpus or live generation is selected or authorized by this configuration."
+  ],
+  "task_hashes": {
+    "classification": "fa7f137dfa9573059bd8a214bd1eea6381cdb08735478a82874f628402013e13",
+    "extraction": "21a9481a3632632f9f6e02bb5a64104051ab5bedda76ca81a0700a62dd229e2b"
+  }
+}

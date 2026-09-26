@@ -1,0 +1,8 @@
+# Full deterministic extractor runtime. CSV, JSON, XML, and raw-binary
+# abstention use only the standard library; these pinned backends enable
+# HDF5, NetCDF/CF, Zarr metadata validation, and Parquet/Arrow extraction.
+numpy==2.2.6
+h5py==3.14.0
+scipy==1.15.3
+pyarrow==20.0.0
+mlcroissant==1.1.0

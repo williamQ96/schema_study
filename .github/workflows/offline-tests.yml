@@ -1,0 +1,24 @@
+name: Offline software tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements_four_category_offline.txt
+      - run: python -m pip install -r requirements_four_category_offline.txt
+      - run: python -m pytest -q tests --junitxml=offline-tests.xml
+      - run: python -m high_fidelity_schema_study.four_category.cli offline-demo --output local-results/ci-demo
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: offline-validation
+          path: |
+            offline-tests.xml
+            local-results/ci-demo/report.json

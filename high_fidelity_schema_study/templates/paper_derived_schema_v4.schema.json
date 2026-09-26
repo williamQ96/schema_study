@@ -1,0 +1,568 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-derived-schema/v4",
+  "title": "Four-category evidence-linked paper schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_document",
+    "claims",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paper-derived-schema/v4"
+    },
+    "source_document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_id",
+        "paper_sha256",
+        "preprocessing_sha256"
+      ],
+      "properties": {
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "paper_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "preprocessing_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/claim"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "qualifiedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "raw_reported_value",
+        "status"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "array",
+            "number",
+            "integer",
+            "boolean",
+            "null",
+            "object"
+          ]
+        },
+        "raw_reported_value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "reported",
+            "inferred",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constraint_type",
+        "value",
+        "status",
+        "raw_text"
+      ],
+      "properties": {
+        "constraint_type": {
+          "enum": [
+            "required",
+            "nullable",
+            "unique",
+            "primary_key",
+            "foreign_key",
+            "range",
+            "domain",
+            "format",
+            "cardinality",
+            "ordering",
+            "other"
+          ]
+        },
+        "value": {},
+        "status": {
+          "enum": [
+            "reported",
+            "inferred",
+            "unknown"
+          ]
+        },
+        "raw_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationship_type",
+        "target_claim_id",
+        "status",
+        "raw_text"
+      ],
+      "properties": {
+        "relationship_type": {
+          "enum": [
+            "contains",
+            "references",
+            "joins",
+            "derived_from",
+            "aligned_with",
+            "indexes",
+            "other"
+          ]
+        },
+        "target_claim_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "reported",
+            "inferred",
+            "unknown"
+          ]
+        },
+        "raw_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "supportsPointer": {
+      "type": "string",
+      "pattern": "^(whole_claim|/(reported_name|canonical_path|parent_claim_id|datatype|shape_or_dimensions|semantic_annotations/[a-z_]+|constraints/[0-9]+|relationships/[0-9]+|encoding/[0-9]+|syntax/[0-9]+))$"
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "document_id",
+        "page",
+        "unit_id",
+        "source_kind",
+        "quote_or_cell_text",
+        "locator",
+        "supports"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "document_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "section": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table_or_figure": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_kind": {
+          "enum": [
+            "header",
+            "footer",
+            "paragraph",
+            "body_column",
+            "table_caption",
+            "table_row",
+            "table_cell",
+            "table_header",
+            "body_full_width",
+            "recovered_source_text"
+          ]
+        },
+        "quote_or_cell_text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "const": "layout_unit_v3"
+        },
+        "supports": {
+          "$ref": "#/$defs/supportsPointer"
+        },
+        "unit_id": {
+          "type": "string",
+          "pattern": "^v3-p[0-9]{4}-.+"
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_id",
+        "object_kind",
+        "reported_name",
+        "canonical_path",
+        "parent_claim_id",
+        "datatype",
+        "shape_or_dimensions",
+        "constraints",
+        "relationships",
+        "semantic_annotations",
+        "evidence",
+        "claim_state",
+        "confidence",
+        "inference_basis",
+        "uncertainty_reason",
+        "encoding",
+        "syntax",
+        "category_annotations"
+      ],
+      "properties": {
+        "claim_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "object_kind": {
+          "enum": [
+            "dataset",
+            "table",
+            "group",
+            "array",
+            "record",
+            "variable",
+            "field",
+            "dimension"
+          ]
+        },
+        "reported_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonical_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parent_claim_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datatype": {
+          "$ref": "#/$defs/qualifiedValue"
+        },
+        "shape_or_dimensions": {
+          "$ref": "#/$defs/qualifiedValue"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/constraint"
+          }
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relationship"
+          }
+        },
+        "semantic_annotations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "unit",
+            "value_domain",
+            "spatial_meaning",
+            "temporal_meaning",
+            "analytical_role"
+          ],
+          "properties": {
+            "description": {
+              "$ref": "#/$defs/qualifiedValue"
+            },
+            "unit": {
+              "$ref": "#/$defs/qualifiedValue"
+            },
+            "value_domain": {
+              "$ref": "#/$defs/qualifiedValue"
+            },
+            "spatial_meaning": {
+              "$ref": "#/$defs/qualifiedValue"
+            },
+            "temporal_meaning": {
+              "$ref": "#/$defs/qualifiedValue"
+            },
+            "analytical_role": {
+              "$ref": "#/$defs/qualifiedValue"
+            }
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "claim_state": {
+          "enum": [
+            "supported",
+            "inferred",
+            "conflicted",
+            "unknown"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "inference_basis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uncertainty_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "encoding": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value",
+              "raw_reported_value",
+              "status"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "array",
+                  "number",
+                  "integer",
+                  "boolean",
+                  "null",
+                  "object"
+                ]
+              },
+              "raw_reported_value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "reported",
+                  "inferred",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        },
+        "syntax": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value",
+              "raw_reported_value",
+              "status"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "array",
+                  "number",
+                  "integer",
+                  "boolean",
+                  "null",
+                  "object"
+                ]
+              },
+              "raw_reported_value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "reported",
+                  "inferred",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        },
+        "category_annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/categoryAnnotation"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "claim_state": {
+                "enum": [
+                  "supported",
+                  "inferred",
+                  "conflicted"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "claim_state": {
+                "const": "inferred"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "inference_basis": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "claim_state": {
+                "const": "unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "uncertainty_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "categoryAnnotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_pointer",
+        "categories",
+        "evidence_ids"
+      ],
+      "properties": {
+        "target_pointer": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "structure",
+              "encoding",
+              "value",
+              "syntax"
+            ]
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

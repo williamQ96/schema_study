@@ -1,0 +1,162 @@
+{
+  "schema_version": "four-category-model-catalog/v1",
+  "profiles": [
+    {
+      "profile_id": "local_a_v1",
+      "backend": "transformers",
+      "model_id": "/models/REPLACE_LOCAL_A",
+      "revision": "REPLACE_WITH_IMMUTABLE_REVISION",
+      "deployment": "local",
+      "endpoint": null,
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [
+          "max_output_tokens",
+          "temperature",
+          "top_p",
+          "top_k",
+          "do_sample",
+          "repetition_penalty",
+          "seed"
+        ],
+        "supports_system_role": true
+      },
+      "runtime": {
+        "settings": {
+          "torch_dtype": "bfloat16",
+          "attn_implementation": "sdpa",
+          "trust_remote_code": false
+        },
+        "chat_template_kwargs": {},
+        "quantization": null,
+        "checkpoint_manifest": null
+      },
+      "status": "draft"
+    },
+    {
+      "profile_id": "local_b_v1",
+      "backend": "transformers",
+      "model_id": "/models/REPLACE_LOCAL_B",
+      "revision": "REPLACE_WITH_IMMUTABLE_REVISION",
+      "deployment": "local",
+      "endpoint": null,
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [
+          "max_output_tokens",
+          "temperature",
+          "top_p",
+          "top_k",
+          "do_sample",
+          "repetition_penalty",
+          "seed"
+        ],
+        "supports_system_role": true
+      },
+      "runtime": {
+        "settings": {
+          "torch_dtype": "bfloat16",
+          "attn_implementation": "sdpa",
+          "trust_remote_code": false
+        },
+        "chat_template_kwargs": {},
+        "quantization": null,
+        "checkpoint_manifest": null
+      },
+      "status": "draft"
+    },
+    {
+      "profile_id": "local_c_v1",
+      "backend": "transformers",
+      "model_id": "/models/REPLACE_LOCAL_C",
+      "revision": "REPLACE_WITH_IMMUTABLE_REVISION",
+      "deployment": "local",
+      "endpoint": null,
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [
+          "max_output_tokens",
+          "temperature",
+          "top_p",
+          "top_k",
+          "do_sample",
+          "repetition_penalty",
+          "seed"
+        ],
+        "supports_system_role": true
+      },
+      "runtime": {
+        "settings": {
+          "torch_dtype": "bfloat16",
+          "attn_implementation": "sdpa",
+          "trust_remote_code": false
+        },
+        "chat_template_kwargs": {},
+        "quantization": null,
+        "checkpoint_manifest": null
+      },
+      "status": "draft"
+    },
+    {
+      "profile_id": "frontier_v1",
+      "backend": "responses",
+      "model_id": "UNSELECTED",
+      "revision": null,
+      "deployment": "remote",
+      "endpoint": "https://api.openai.com/v1/responses",
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [
+          "max_output_tokens"
+        ],
+        "supports_system_role": true
+      },
+      "api_key_env": "OPENAI_API_KEY",
+      "runtime": {
+        "timeout_seconds": 180,
+        "token_count_observations": {},
+        "token_counter": {
+          "kind": "responses_input_tokens",
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "timeout_seconds": 30
+        }
+      },
+      "status": "draft"
+    },
+    {
+      "profile_id": "local_http_example_v1",
+      "backend": "chat_completions",
+      "model_id": "UNSELECTED",
+      "revision": null,
+      "deployment": "local",
+      "endpoint": "http://127.0.0.1:8000/v1/chat/completions",
+      "context_window": 1,
+      "capabilities": {
+        "supported_parameters": [
+          "max_output_tokens",
+          "temperature",
+          "top_p",
+          "top_k",
+          "repetition_penalty",
+          "seed"
+        ],
+        "supports_system_role": true
+      },
+      "runtime": {
+        "timeout_seconds": 180,
+        "parameter_mapping": {
+          "max_output_tokens": "max_tokens",
+          "top_k": "top_k",
+          "repetition_penalty": "repetition_penalty"
+        },
+        "token_count_observations": {},
+        "token_counter": {
+          "kind": "vllm_tokenize",
+          "endpoint": "http://127.0.0.1:8000/tokenize",
+          "timeout_seconds": 30
+        }
+      },
+      "status": "draft"
+    }
+  ]
+}

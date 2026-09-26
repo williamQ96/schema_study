@@ -1,0 +1,15 @@
+# Isolated local inference runtime; long-context qualification uses WSL2/Linux with CUDA 13.0.
+torch==2.12.1
+torchvision==0.27.1
+triton==3.7.1
+transformers==5.16.1
+accelerate==1.14.0
+bitsandbytes==0.50.2
+kernels==0.16.1
+einops==0.8.2
+huggingface_hub==1.29.0
+tokenizers==0.23.1
+safetensors==0.8.0
+sentencepiece==0.2.2
+protobuf==7.36.0
+jsonschema==4.26.0

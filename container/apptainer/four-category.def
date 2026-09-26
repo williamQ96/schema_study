@@ -1,0 +1,59 @@
+Bootstrap: docker
+From: {{ CUDA_IMAGE }}
+
+%arguments
+    CUDA_IMAGE=nvidia/cuda:13.0.2-cudnn-devel-ubuntu24.04
+
+%files
+    requirements-phase1-inference.txt /opt/requirements/requirements-phase1-inference.txt
+    requirements_four_category_offline.txt /opt/requirements/requirements_four_category_offline.txt
+
+%post
+    set -eu
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        git \
+        libgomp1 \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-venv
+    rm -rf /var/lib/apt/lists/*
+
+    python3 -m venv /opt/four-category-venv
+    /opt/four-category-venv/bin/python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+    /opt/four-category-venv/bin/python -m pip install --no-cache-dir \
+        -r /opt/requirements/requirements-phase1-inference.txt \
+        -r /opt/requirements/requirements_four_category_offline.txt
+    /opt/four-category-venv/bin/python -m pip freeze --all > /opt/requirements/pip-freeze.txt
+
+%environment
+    export PATH=/opt/four-category-venv/bin:$PATH
+    export PYTHONPATH=/workspace
+    export PYTHONDONTWRITEBYTECODE=1
+    export PYTHONNOUSERSITE=1
+    export PYTHONUNBUFFERED=1
+    export HF_HOME=/cache/huggingface
+    export HF_HUB_CACHE=/cache/huggingface/hub
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+
+%runscript
+    module="${MERCURY_PYTHON_MODULE:-high_fidelity_schema_study.four_category.cli}"
+    if [ "${1:-}" = run ]; then
+        case "$module" in
+            high_fidelity_schema_study.four_category.cli) module=high_fidelity_schema_study.four_category.mercury ;;
+        esac
+    fi
+    case "$module" in
+        high_fidelity_schema_study.four_category.cli|high_fidelity_schema_study.four_category.mercury) ;;
+        *) echo "Unsupported MERCURY_PYTHON_MODULE: $module" >&2; exit 2 ;;
+    esac
+    exec python -m "$module" "$@"
+
+%test
+    python -m pip check
+    python -c 'import torch, transformers, jsonschema, pdfplumber, openpyxl, numpy, h5py, scipy, pyarrow; print("runtime imports OK")'

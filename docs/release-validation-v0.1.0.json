@@ -1,0 +1,15 @@
+{
+  "schema_version": "schema-study-release-validation/v1",
+  "version": "0.1.0",
+  "date": "2026-09-26",
+  "scope": "Public runtime, synthetic tests and documentation; no new model experiment",
+  "windows_isolated_public_package": {"passed": 112, "skipped": 1, "failed": 0, "skip_reason": "Windows symbolic-link privilege unavailable"},
+  "linux_cuda_container_cpu_tests": {"passed": 113, "skipped": 0, "failed": 0},
+  "docker_dependency_check": "pass",
+  "docker_runtime": {"torch": "2.12.1+cu130", "cuda": "13.0", "transformers": "5.16.1"},
+  "docker_offline_demo": {"initial_mock_dispatches": 11, "resume_mock_dispatches": 0, "real_model_calls": 0, "byte_integrity": "pass", "derivation_validity": "pass", "semantic_accuracy": null},
+  "historical_preservation": {"baseline_one_files": 5320, "baseline_two_files": 178, "changed": 0, "note": "Baselines overlap; counts are not additive. This verifies current bytes against earlier repair baselines, not historical creation times."},
+  "mercury_sif_build_and_gpu_qualification": "not_executed",
+  "real_model_inference": "not_executed",
+  "independent_semantic_evaluation": "pending"
+}

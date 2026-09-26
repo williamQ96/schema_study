@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+.env.*
+*.sif
+*.sif.sha256
+*.log
+publication-tests.xml
+local-results/
+models/
+outputs/
+cache/

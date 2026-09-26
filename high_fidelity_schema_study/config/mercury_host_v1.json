@@ -1,0 +1,80 @@
+{
+  "schema_version": "mercury-host/v1",
+  "host_id": "mercury",
+  "status": "reported_not_observed",
+  "reported": {
+    "os": "Red Hat Enterprise Linux 9.8 (Plow)",
+    "gpus": {
+      "count": 4,
+      "name": "NVIDIA H200 NVL",
+      "memory_GB_each_nominal": 141
+    },
+    "cpus": {
+      "sockets": 2,
+      "name": "AMD EPYC 9555",
+      "physical_cores": 128,
+      "logical_threads": 128,
+      "smt": false
+    },
+    "ram_TiB_approx": 1.1,
+    "swap_GiB": 127,
+    "network": [
+      "2 x 10 Gbps Intel X710 10GBASE-T",
+      "InfiniBand up to 200 Gbps Mellanox ConnectX-6"
+    ]
+  },
+  "resource_presets": {
+    "h200_1gpu": {
+      "gpu_count": 1,
+      "omp_num_threads": 8,
+      "transformers_settings": {
+        "device_map": "auto",
+        "max_memory": {
+          "0": "120GiB",
+          "cpu": "128GiB"
+        }
+      },
+      "notes": [
+        "Placement budgets are starting proposals, not guaranteed free memory or KV-cache limits.",
+        "GPU ordinals are relative to the visible allocation; device_map is layer placement, not tensor parallelism.",
+        "CPU spill is explicitly allowed up to 128GiB; disk offload requires a separate qualified profile."
+      ]
+    },
+    "h200_2gpu": {
+      "gpu_count": 2,
+      "omp_num_threads": 8,
+      "transformers_settings": {
+        "device_map": "auto",
+        "max_memory": {
+          "0": "120GiB",
+          "1": "120GiB",
+          "cpu": "128GiB"
+        }
+      },
+      "notes": [
+        "Placement budgets are starting proposals, not guaranteed free memory or KV-cache limits.",
+        "GPU ordinals are relative to the visible allocation; device_map is layer placement, not tensor parallelism.",
+        "CPU spill is explicitly allowed up to 128GiB; disk offload requires a separate qualified profile."
+      ]
+    },
+    "h200_4gpu": {
+      "gpu_count": 4,
+      "omp_num_threads": 8,
+      "transformers_settings": {
+        "device_map": "auto",
+        "max_memory": {
+          "0": "120GiB",
+          "1": "120GiB",
+          "2": "120GiB",
+          "3": "120GiB",
+          "cpu": "128GiB"
+        }
+      },
+      "notes": [
+        "Placement budgets are starting proposals, not guaranteed free memory or KV-cache limits.",
+        "GPU ordinals are relative to the visible allocation; device_map is layer placement, not tensor parallelism.",
+        "CPU spill is explicitly allowed up to 128GiB; disk offload requires a separate qualified profile."
+      ]
+    }
+  }
+}

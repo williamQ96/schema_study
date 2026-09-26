@@ -1,0 +1,26 @@
+{
+  "schema_version": "mercury-selection/v1",
+  "experiment_id": "dual-source-mercury-draft-v1",
+  "resource_preset": "h200_4gpu",
+  "locals": [
+    "local_a_v1",
+    "local_b_v1",
+    "local_c_v1"
+  ],
+  "soft_reference": "frontier_v1",
+  "classifier": {
+    "profile_id": "local_a_v1",
+    "profile_sha256": null
+  },
+  "parameters": {
+    "classification": {
+      "do_sample": false,
+      "max_output_tokens": 16384
+    }
+  },
+  "notes": [
+    "The classifier selection and its catalog hash must be set explicitly; swapping extraction profiles never follows this binding.",
+    "Replace model paths, revisions and context windows using actual qualification before freezing.",
+    "Parameters here replace an entire role parameter object; unsupported backend controls fail, never disappear."
+  ]
+}

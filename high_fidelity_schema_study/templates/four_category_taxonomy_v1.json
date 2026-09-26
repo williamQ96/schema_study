@@ -1,0 +1,28 @@
+{
+  "schema_version": "four-category-taxonomy/v1",
+  "taxonomy_id": "greenberg-functional-categories-operationalization/v1",
+  "source": {
+    "title": "The metadata ecosystem and AI: Enabling FAIR and AI-ready data",
+    "authors": "Greenberg et al.",
+    "year": 2026,
+    "doi": "10.1002/aaai.70060",
+    "definition_pages": [3, 4, 5]
+  },
+  "interpretation": "The source classifies functions of metadata standards. Applying these overlapping categories to paper and dataset evidence is this project's operational adaptation, not a preprocessing prescription from the article.",
+  "categories": {
+    "structure": {"definition": "Entities, descriptive properties, organization, types, dimensions, relationships and structural requirements or constraints.", "examples": ["field definition", "datatype", "array shape", "required property", "cardinality", "declared numeric range"]},
+    "encoding": {"definition": "Formal representation, serialization and packaging of information for storage, exchange or computation.", "examples": ["XML", "JSON-LD", "RDF representation", "CSV serialization", "HDF5 container"]},
+    "value": {"definition": "Controlled terms, concepts, identifiers, codes and semantic value assignments; explicit unit semantics are included in this operational adaptation.", "examples": ["declared enumeration", "code-to-label mapping", "controlled vocabulary", "explicit unit attribute"], "excludes": ["ordinary measurement numbers as controlled vocabulary", "performance statistics", "observed sample set asserted as allowed domain"]},
+    "syntax": {"definition": "Ordering, formatting and lexical conventions; this category crosscuts structure, encoding and value.", "examples": ["date format", "delimiter", "quote character", "namespace", "declared field ordering", "identifier lexical pattern"]}
+  },
+  "multilabel": true,
+  "noncategory_states": ["none", "uncertain"],
+  "invariants": [
+    "Keep full paper input; category indexes are fallible navigation aids, not gold.",
+    "A JSON model response does not establish JSON dataset encoding.",
+    "Observed values and sampled nullability do not establish universal constraints.",
+    "Field-name-derived semantics and units remain inferred.",
+    "Preserve evidence origin; dataset facts do not establish paper visibility.",
+    "Reuse one fact identity across overlapping category views."
+  ]
+}

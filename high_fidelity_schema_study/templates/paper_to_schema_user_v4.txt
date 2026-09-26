@@ -1,0 +1,10 @@
+TASK: Extract the paper-reported schema using the shared four-category task.
+SOURCE IDENTITY
+{{SOURCE_IDENTITY_JSON}}
+TAXONOMY
+{{TAXONOMY_JSON}}
+OUTPUT CONTRACT
+{{TARGET_SCHEMA_JSON}}
+FULL PAPER AND FROZEN AUTOMATED CATEGORY INDEX
+{{CATEGORIZED_INPUT_JSON}}
+Keep the full-paper evidence boundary. The index is advisory. Unsupported assertions remain unknown.
