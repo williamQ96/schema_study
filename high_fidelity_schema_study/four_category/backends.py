@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import gc
+import copy
 from importlib import metadata as importlib_metadata
 import json
 import math
@@ -18,6 +19,7 @@ import platform
 import re
 from typing import Any, Callable
 from urllib import error, request as urllib_request
+from . import structured_output
 
 
 BACKENDS = {"transformers", "chat_completions", "responses", "mock"}
@@ -43,6 +45,8 @@ MEMORY = re.compile(r"^[1-9][0-9]*(?:\.[0-9]+)?(?:GiB|MiB|GB|MB)$")
 
 def _transformers_runtime_errors(runtime: dict) -> list[str]:
     errors = []
+    if runtime.get('response_decoder') is not None and runtime.get('response_decoder') != 'muse-atem/v1':
+        errors.append('unsupported Transformers response_decoder')
     settings = runtime.get("settings", {})
     if not isinstance(settings, dict):
         return ["runtime.settings must be an object"]
@@ -156,6 +160,8 @@ def validate_profile(profile: dict, for_execution: bool = False) -> list[str]:
         errors.append("runtime must be an object")
     else:
         runtime = profile["runtime"]
+        if backend != 'transformers' and runtime.get('response_decoder') is not None:
+            errors.append('runtime.response_decoder is supported only for transformers')
         mapping = runtime.get("parameter_mapping", {})
         if not isinstance(mapping, dict) or any(not isinstance(k, str) or not isinstance(v, str) or not v for k, v in mapping.items()):
             errors.append("runtime.parameter_mapping must map parameter names to nonempty wire names")
@@ -172,6 +178,23 @@ def validate_profile(profile: dict, for_execution: bool = False) -> list[str]:
             errors.append("runtime.ignored_parameters must be a list of strings")
         if backend == "transformers":
             errors.extend(_transformers_runtime_errors(runtime))
+        if runtime.get("structured_output") is not None:
+            control = runtime["structured_output"]
+            expected_keys = {"engine", "version", "channel"}
+            if isinstance(control, dict) and control.get("channel") == structured_output.MUSE_V2:
+                expected_keys |= {"reasoning_max_tokens", "final_min_tokens"}
+            if isinstance(control, dict) and isinstance(control.get("channel"), str) and control["channel"] in structured_output.ORDERED_CHANNELS:
+                expected_keys.add("max_whitespace_cnt")
+            if backend not in {"transformers", "mock"} or not isinstance(control, dict) or set(control) != expected_keys or control.get("engine") != structured_output.ENGINE or control.get("version") != structured_output.VERSION or not isinstance(control.get("channel"), str) or control["channel"] not in structured_output.CHANNELS:
+                errors.append("unsupported runtime.structured_output declaration")
+            elif control["channel"] in structured_output.ORDERED_CHANNELS:
+                errors.extend(structured_output._v2_errors(control))
+            if isinstance(control, dict) and control.get("channel") == structured_output.MUSE_V2 and backend != "transformers":
+                errors.append("Muse v2 requires transformers backend")
+            if isinstance(control, dict) and backend == "transformers" and isinstance(control.get("channel"), str) and control["channel"] in {"muse-atem/v1", structured_output.MUSE_V2} and runtime.get("response_decoder") != "muse-atem/v1":
+                errors.append("Muse structured output requires runtime.response_decoder=muse-atem/v1")
+            elif isinstance(control, dict) and backend == "transformers" and isinstance(control.get("channel"), str) and control["channel"] in {"json", structured_output.JSON_V2} and runtime.get("response_decoder") is not None:
+                errors.append("JSON structured output conflicts with response_decoder")
     if profile.get("status") not in STATUSES:
         errors.append("status must be draft, qualified, or frozen")
     if for_execution and backend != "mock" and profile.get("status") != "frozen":
@@ -256,10 +279,11 @@ def _base(profile: dict, parameters: dict) -> dict:
         "response_id": None, "created": None, "system_fingerprint": None,
         "http_status": None, "provider_version": None, "provider_status": None,
         "runtime_identity": None, "generation_config": None,
+        "structured_output_requested": None, "structured_output_applied": None,
     }
 
 
-def _request(profile: dict, messages: list[dict], parameters: dict) -> tuple[dict, dict]:
+def _request(profile: dict, messages: list[dict], parameters: dict, response_schema: dict | None = None) -> tuple[dict, dict]:
     backend = profile["backend"]
     mapping = profile["runtime"].get("parameter_mapping", {})
     mapped = {}
@@ -274,13 +298,19 @@ def _request(profile: dict, messages: list[dict], parameters: dict) -> tuple[dic
         sent = dict(mapped)
         if "seed" in parameters:
             sent["seed"] = parameters["seed"]
-        return {"backend": backend, "model": profile["model_id"], "revision": profile["revision"], "messages": messages,
+        req = {"backend": backend, "model": profile["model_id"], "revision": profile["revision"], "messages": messages,
                 "generation_parameters": mapped, "seed": parameters.get("seed"),
                 "chat_template_kwargs": profile["runtime"].get("chat_template_kwargs", {}),
                 "quantization": profile["runtime"].get("quantization"),
-                "settings": profile["runtime"].get("settings", {})}, sent
+                "settings": profile["runtime"].get("settings", {})}
+        if response_schema is not None:
+            req["structured_output"] = structured_output.request_control(profile, response_schema)
+        return req, sent
     if backend == "mock":
-        return {"backend": backend, "model": profile["model_id"], "messages": messages, "parameters": parameters}, dict(parameters)
+        req = {"backend": backend, "model": profile["model_id"], "messages": messages, "parameters": parameters}
+        if response_schema is not None:
+            req["structured_output"] = structured_output.request_control(profile, response_schema)
+        return req, dict(parameters)
     if backend == "chat_completions":
         body = {"model": profile["model_id"], "messages": messages, **mapped}
         return {"backend": backend, "endpoint": profile.get("endpoint"), "body": body}, mapped
@@ -290,14 +320,18 @@ def _request(profile: dict, messages: list[dict], parameters: dict) -> tuple[dic
     return {"backend": backend, "endpoint": profile.get("endpoint"), "body": body}, {k: v for k, v in body.items() if k not in {"model", "input"}}
 
 
-def request_for(profile: dict, messages: list[dict], parameters: dict) -> dict:
+def request_for(profile: dict, messages: list[dict], parameters: dict, *, response_schema: dict | None = None) -> dict:
     """Rebuild the credential-free wire request from independent inputs."""
-    errors = validate_profile(profile) + preflight_parameters(profile, parameters)
+    errors = validate_profile(profile) + preflight_parameters(profile, parameters) + structured_output.validate_control(profile, response_schema)
     if errors:
         raise ValueError("; ".join(errors))
     if not isinstance(messages, list) or any(not isinstance(x, dict) or "role" not in x or "content" not in x for x in messages):
         raise ValueError("messages must be role/content objects")
-    return _request(profile, messages, parameters)[0]
+    req = _request(profile, messages, parameters, response_schema)[0]
+    budget_errors = structured_output.validate_request_budget(req)
+    if budget_errors:
+        raise ValueError("; ".join(budget_errors))
+    return req
 
 
 def _http_transport(req: dict, profile: dict, record: dict) -> tuple[dict, dict]:
@@ -381,7 +415,7 @@ def _cuda_identity(torch_module: Any) -> dict:
     for ordinal in range(count):
         properties = cuda.get_device_properties(ordinal)
         devices.append({"ordinal": ordinal, "name": cuda.get_device_name(ordinal),
-                        "uuid": getattr(properties, "uuid", None),
+                        "uuid": (str(properties.uuid) if getattr(properties, "uuid", None) is not None else None),
                         "total_memory_bytes": getattr(properties, "total_memory", None)})
     return {"cuda_visible_devices_env": os.environ.get("CUDA_VISIBLE_DEVICES"),
             "cuda_runtime": getattr(torch_module.version, "cuda", None),
@@ -416,13 +450,20 @@ def _transformers_transport(req: dict, profile: dict) -> dict:
         if req["seed"] is not None:
             transformers.set_seed(req["seed"])
         encoded = encoded.to(model.device)
+        generate_kwargs = {}
+        applied = None
+        if "structured_output" in req:
+            processor, applied = structured_output.logits_processor(req, tokenizer, model)
+            generate_kwargs["logits_processor"] = [processor]
         with torch.inference_mode():
-            generated = model.generate(encoded, **req["generation_parameters"])
+            generated = model.generate(encoded, **req["generation_parameters"], **generate_kwargs)
         output_ids = generated[0][input_tokens:]
         observed = {key: req["generation_parameters"].get(key, config.get(key))
                     for key in ("max_new_tokens", "temperature", "top_p", "top_k", "do_sample", "repetition_penalty")
                     if key in req["generation_parameters"] or key in config}
         observed["seed"] = req["seed"]
+        muse_channels = (structured_output.muse_channel_usage(output_ids.tolist(), tokenizer)
+                         if req.get("structured_output", {}).get("channel") == structured_output.MUSE_V2 else None)
         placement = getattr(model, "hf_device_map", None)
         if isinstance(placement, dict):
             placement = {str(key): value if isinstance(value, (str, int)) else str(value)
@@ -433,7 +474,9 @@ def _transformers_transport(req: dict, profile: dict) -> dict:
                 "model": profile["model_id"],
                 "usage": {"input_tokens": input_tokens, "output_tokens": int(output_ids.shape[-1])},
                 "finish_reason": "length" if limit and int(output_ids.shape[-1]) >= limit else "stop",
+                "status": "truncated" if limit and int(output_ids.shape[-1]) >= limit else "success",
                 "effective_parameters": observed, "generation_config": config,
+                "structured_output_applied": applied,
                 "runtime_identity": {"python": platform.python_version(), "torch": torch.__version__,
                                      "transformers": transformers.__version__,
                                      "accelerate": _installed_version("accelerate"),
@@ -443,6 +486,8 @@ def _transformers_transport(req: dict, profile: dict) -> dict:
                                      "requested_revision": profile["revision"], "hf_device_map": placement,
                                      "primary_device": str(model.device),
                                      "placement_semantics": "device_map dispatch; tensor parallelism not claimed",
+                                     "structured_output_applied": applied,
+                                     **({"muse_channels": muse_channels} if muse_channels is not None else {}),
                                      **_cuda_identity(torch)}}
     finally:
         # A batch may switch among very large profiles. Do not retain model or
@@ -462,7 +507,7 @@ def _extract_text(content: Any) -> str | None:
     return None
 
 
-def _normalize(record: dict, backend: str, payload: Any) -> dict:
+def _normalize(record: dict, backend: str, payload: Any, *, profile: dict | None = None) -> dict:
     record["raw_response"] = payload
     if not isinstance(payload, dict):
         record["status"] = "transport_error"
@@ -477,6 +522,7 @@ def _normalize(record: dict, backend: str, payload: Any) -> dict:
     record["runtime_identity"] = payload.get("runtime_identity")
     record["generation_config"] = payload.get("generation_config")
     record["effective_parameters"] = payload.get("effective_parameters")
+    record["structured_output_applied"] = copy.deepcopy(payload.get("structured_output_applied"))
     if payload.get("error") is not None:
         provider_error = payload["error"]
         code = provider_error.get("code") if isinstance(provider_error, dict) else None
@@ -489,6 +535,17 @@ def _normalize(record: dict, backend: str, payload: Any) -> dict:
         record["usage"] = payload.get("usage")
         record["finish_reason"] = payload.get("finish_reason")
         record["status"] = payload.get("status") if payload.get("status") in {"refused", "truncated", "unavailable", "transport_error", "invalid_request"} else "success"
+        decoder = (profile or {}).get('runtime', {}).get('response_decoder')
+        if backend == 'transformers' and decoder == 'muse-atem/v1' and record['status'] == 'success':
+            from .response_channels import decode_muse_atem
+            try:
+                decoded = decode_muse_atem(payload.get('decoded_with_special_tokens'))
+                record['raw_text'] = decoded['text']
+                record['response_channel_normalization'] = {k:v for k,v in decoded.items() if k != 'text'}
+            except ValueError as exc:
+                record.update(status='contract_invalid', raw_text=None,
+                              response_channel_normalization={'policy':decoder,'error':str(exc)},
+                              errors=['response_channel_invalid:'+str(exc)])
     elif backend == "chat_completions":
         choices = payload.get("choices") or []
         choice = choices[0] if choices and isinstance(choices[0], dict) else {}
@@ -528,7 +585,7 @@ def _http_error_status(code: int) -> str:
 
 
 def invoke(profile: dict, messages: list[dict], parameters: dict, *, allow_live: bool = False,
-           transport: Callable[[dict], dict] | None = None) -> dict:
+           transport: Callable[[dict], dict] | None = None, response_schema: dict | None = None) -> dict:
     """Preflight, invoke, and preserve the provider's unmodified response."""
     record = _base(profile, parameters)
     record["execution_mode"] = "injected_transport" if transport is not None else (
@@ -540,11 +597,17 @@ def invoke(profile: dict, messages: list[dict], parameters: dict, *, allow_live:
     elif isinstance(profile, dict) and isinstance(profile.get("capabilities"), dict) and not profile["capabilities"].get("supports_system_role") and any(x["role"] == "system" for x in messages):
         errors.append("profile does not support system role")
     errors.extend(preflight_parameters(profile, parameters))
+    if isinstance(profile, dict):
+        errors.extend(structured_output.validate_control(profile, response_schema))
+        if not errors and response_schema is not None:
+            errors.extend(structured_output.validate_request_budget(
+                _request(profile, messages, parameters, response_schema)[0]))
     if errors:
         record.update(status="invalid_request", errors=errors)
         return record
-    req, sent = _request(profile, messages, parameters)
-    record.update(request=req, sent_parameters=sent)
+    req, sent = _request(profile, messages, parameters, response_schema)
+    record.update(request=req, sent_parameters=sent,
+                  structured_output_requested=req.get("structured_output"))
     backend = profile["backend"]
     if backend != "mock" and (not allow_live or profile["status"] != "frozen"):
         record.update(status="unavailable", errors=["live backend requires allow_live=True and a frozen profile"])
@@ -556,6 +619,8 @@ def invoke(profile: dict, messages: list[dict], parameters: dict, *, allow_live:
         elif backend == "mock":
             record["dispatch_started"] = True
             payload = {"text": profile["runtime"].get("mock_text", ""), "model": profile["model_id"], "usage": None, "finish_reason": "stop"}
+            if response_schema is not None:
+                payload["structured_output_applied"] = structured_output.applied_control(req, synthetic=True)
         elif backend == "transformers":
             record["dispatch_started"] = True
             payload = _transformers_transport(req, profile)
@@ -563,7 +628,11 @@ def invoke(profile: dict, messages: list[dict], parameters: dict, *, allow_live:
             record["dispatch_started"] = True
             payload, http_meta = _http_transport(req, profile, record)
             record.update(http_meta)
-        normalized = _normalize(record, backend, payload)
+        normalized = _normalize(record, backend, payload, profile=profile)
+        if response_schema is not None and normalized["status"] == "success":
+            expected_applied = structured_output.applied_control(req, synthetic=transport is not None or backend == "mock")
+            if normalized.get("structured_output_applied") != expected_applied:
+                normalized.update(status="contract_invalid", errors=["structured_output_application_unproven"])
         if backend in {"chat_completions", "responses"} and transport is None:
             for key, value in http_meta.items():
                 if normalized.get(key) is None:
@@ -624,9 +693,15 @@ def replay_backend_result(profile: dict, result: dict) -> list[str]:
         if result.get("response_id") != result["errors"][0].get("request_id"):
             errors.append("response_id_replay_mismatch")
         return errors
-    observed = _normalize(_base(profile, result.get("requested_parameters") or {}), profile.get("backend"), raw)
+    observed = _normalize(_base(profile, result.get("requested_parameters") or {}), profile.get("backend"), raw, profile=profile)
+    control = (result.get("request") or {}).get("structured_output")
+    if control is not None and observed["status"] == "success":
+        expected_applied = structured_output.applied_control(result["request"], synthetic=result.get("execution_mode") != "live")
+        if observed.get("structured_output_applied") != expected_applied:
+            observed.update(status="contract_invalid", errors=["structured_output_application_unproven"])
     for key in ("status", "raw_text", "returned_model", "usage", "finish_reason",
-                "created", "system_fingerprint", "runtime_identity", "generation_config", "effective_parameters", "provider_status"):
+                "created", "system_fingerprint", "runtime_identity", "generation_config", "effective_parameters", "provider_status",
+                "response_channel_normalization", "structured_output_applied"):
         if result.get(key) != observed.get(key):
             errors.append(f"{key}_replay_mismatch")
     # HTTP transport headers may supply a request ID/version outside the body.
@@ -639,7 +714,7 @@ def replay_backend_result(profile: dict, result: dict) -> list[str]:
     return errors
 
 
-def backend_record_errors(result: dict, profile: dict, messages: list[dict], parameters: dict) -> list[str]:
+def backend_record_errors(result: dict, profile: dict, messages: list[dict], parameters: dict, *, response_schema: dict | None = None) -> list[str]:
     """Replay normalization and independently verify request provenance."""
     errors = replay_backend_result(profile, result)
     if not isinstance(result, dict):
@@ -648,9 +723,13 @@ def backend_record_errors(result: dict, profile: dict, messages: list[dict], par
         errors.append("requested_parameters_mismatch")
     if result.get("request") is not None:
         try:
-            expected, sent = _request(profile, messages, parameters)
+            expected, sent = _request(profile, messages, parameters, response_schema)
             if result["request"] != expected:
                 errors.append("request_replay_mismatch")
+            if result.get("structured_output_requested") != expected.get("structured_output"):
+                errors.append("structured_output_requested_mismatch")
+            if response_schema is not None and result.get("status") == "success" and result.get("structured_output_applied") != structured_output.applied_control(expected, synthetic=result.get("execution_mode") != "live"):
+                errors.append("structured_output_application_unproven")
             if result.get("sent_parameters") != sent:
                 errors.append("sent_parameters_replay_mismatch")
         except (KeyError, TypeError, ValueError) as exc:

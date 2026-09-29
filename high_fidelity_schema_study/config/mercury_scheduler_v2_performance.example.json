@@ -1,0 +1,52 @@
+{
+  "schema_version": "mercury-scheduler-v2-performance-config/v1",
+  "created_at": "REPLACE_WITH_UTC_TIMESTAMP_BEFORE_FREEZE",
+  "required_parameters": ["max_output_tokens", "temperature"],
+  "baseline_profile": {
+    "profile_id": "REPLACE_WITH_FROZEN_BASELINE_PROFILE_ID",
+    "backend": "transformers",
+    "engine": "REPLACE_WITH_TRANSFORMERS_RUNTIME_VERSION",
+    "image": "REPLACE_WITH_BASELINE_IMAGE@sha256:REPLACE_WITH_64_HEX_DIGEST",
+    "image_sha256": "REPLACE_WITH_BASELINE_IMAGE_SHA256",
+    "revision": "REPLACE_WITH_FULL_40_OR_64_HEX_MODEL_REVISION",
+    "checkpoint_identity": "REPLACE_WITH_BASELINE_CHECKPOINT_SHA256",
+    "model_id": "REPLACE_WITH_BASELINE_MODEL_ID",
+    "tokenizer_id": "REPLACE_WITH_BASELINE_TOKENIZER_ID@FULL_40_OR_64_HEX_REVISION"
+  },
+  "grammar_required": true,
+  "seed_required": true,
+  "factors": {
+    "concurrency": [1, 2, 4],
+    "prefix_cache": [false, true],
+    "gpu_count": [1, 2]
+  },
+  "models": [
+    {
+      "profile_id": "REPLACE_WITH_UNIQUE_FROZEN_PROFILE_ID",
+      "backend": "service",
+      "engine": "REPLACE_WITH_ENGINE_AND_VERSION",
+      "image": "REPLACE_WITH_IMMUTABLE_IMAGE_REFERENCE",
+      "image_sha256": "REPLACE_WITH_IMAGE_DIGEST",
+      "revision": "REPLACE_WITH_FULL_40_OR_64_HEX_IMMUTABLE_REVISION",
+      "checkpoint_identity": "REPLACE_WITH_CHECKPOINT_MANIFEST_SHA256",
+      "model_id": "REPLACE_WITH_MODEL_ID",
+      "tokenizer_id": "REPLACE_WITH_TOKENIZER_ID@FULL_40_OR_64_HEX_REVISION",
+      "supports_seed": true,
+      "supports_grammar": true,
+      "supported_parameters": ["max_output_tokens", "temperature", "seed"]
+    }
+  ],
+  "frozen_requests": [
+    {
+      "request_id": "REPLACE_WITH_STABLE_ID",
+      "input": {"document_id": "REPLACE_WITH_FROZEN_DOCUMENT_ID"},
+      "task": "REPLACE_WITH_FROZEN_TASK",
+      "messages": [{"role": "user", "content": "REPLACE_WITH_FROZEN_CONTENT"}],
+      "seed": 12345,
+      "generation_parameters": {"max_output_tokens": 1024, "temperature": 0, "seed": 12345},
+      "longest_context": true,
+      "dense_table": true,
+      "prior_failure_tags": ["REPLACE_WITH_RELEVANT_TAG"]
+    }
+  ]
+}

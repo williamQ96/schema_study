@@ -14,6 +14,7 @@ from .backends import invoke, profile_hash, validate_profile, backend_record_err
 from .common import ROOT, digest, file_digest, now, read_json, seal, seal_errors, strict_json, write_new, contained
 from .paper import build_index, classification_errors, extraction_errors, verify_paper, verify_index
 from .tasks import load_task, render_task, task_errors
+from .extraction_protocol import GROUPED_PROTOCOLS, module_for_task as extraction_module
 
 
 def experiment_errors(config: dict, *, execution: bool = False) -> list[str]:
@@ -44,6 +45,26 @@ def experiment_errors(config: dict, *, execution: bool = False) -> list[str]:
     if not isinstance(classification, dict) or not isinstance(classification.get("parameters"), dict):
         return errors + ["classification_parameters_required"]
     classifier = classification.get("profile_id")
+    protocol = classification.get('protocol', 'classification-offsets/v1')
+    if protocol not in {'classification-offsets/v1', 'classification-quotes/v2', 'classification-anchors/v3', 'classification-anchors/v13r2'}:
+        errors.append('unsupported_classification_protocol')
+    if protocol in {'classification-quotes/v2', 'classification-anchors/v3', 'classification-anchors/v13r2'}:
+        grouping = classification.get('grouping')
+        if (not isinstance(grouping, dict) or set(grouping) != {'max_units', 'max_target_chars'}
+                or any(type(v) is not int or v <= 0 for v in grouping.values())):
+            errors.append('classification_grouping_positive_integers_required')
+    elif 'grouping' in classification:
+        errors.append('legacy_classification_cannot_have_grouping')
+    extraction_protocol = config.get('extraction_input_protocol', 'categorized-full/v1')
+    if extraction_protocol not in {'categorized-full/v1', 'extraction-compact/v2'} | GROUPED_PROTOCOLS:
+        errors.append('unsupported_extraction_input_protocol')
+    if extraction_protocol in GROUPED_PROTOCOLS:
+        grouping = config.get('extraction_grouping')
+        if (not isinstance(grouping, dict) or set(grouping) != {'max_windows', 'max_target_chars', 'max_mentions', 'max_facts'}
+                or any(type(v) is not int or v <= 0 for v in grouping.values())):
+            errors.append('extraction_grouping_positive_integers_required')
+    elif 'extraction_grouping' in config:
+        errors.append('legacy_extraction_cannot_have_grouping')
     for key in ("local_parameters", "reference_parameters", "execution", "dataset_parser"):
         if not isinstance(config.get(key), dict):
             errors.append(key + ":object_required")
@@ -69,6 +90,12 @@ def experiment_errors(config: dict, *, execution: bool = False) -> list[str]:
         errors.append("retry_policy_must_be_transport_error_only")
     if config["execution"].get("concurrency_per_backend", 1) != 1:
         errors.append("this_runner_supports_serial_execution_only")
+    grouped_mode = config['execution'].get('grouped_mode')
+    if grouped_mode is not None:
+        if grouped_mode != 'all-groups/v1':
+            errors.append('unsupported_grouped_execution_mode')
+        if protocol not in {'classification-anchors/v3', 'classification-anchors/v13r2'} or extraction_protocol not in {'extraction-pointers/v5', 'extraction-pointers/v6', 'extraction-local-quotes/v7', 'extraction-quote-options/v8', 'extraction-page-regions/v13', 'extraction-page-regions/v13r2'}:
+            errors.append('complete_execution_requires_navigation_v4_and_extraction_v7')
     limit = config["dataset_parser"].get("sample_limit")
     if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
         errors.append("dataset_sample_limit_must_be_positive_integer")
@@ -90,7 +117,47 @@ def tasks_for_config(config: dict) -> dict:
     tax = read_json(contained(ROOT, config["taxonomy_path"]))
     if not isinstance(tax.get("categories"), dict) or set(tax["categories"]) != {"structure", "encoding", "value", "syntax"}:
         raise ValueError("taxonomy must preserve the four category identifiers")
-    return {kind: load_task(kind, taxonomy_value=tax) for kind in ("classification", "extraction")}
+    tasks = {kind: load_task(kind, taxonomy_value=tax) for kind in ("classification", "extraction")}
+    protocol = config['classification'].get('protocol', 'classification-offsets/v1')
+    if protocol == 'classification-quotes/v2':
+        from .classification_v2 import make_task
+        tasks['classification'] = make_task(tax)
+    elif protocol == 'classification-anchors/v3':
+        from .classification_v3 import make_task
+        tasks['classification'] = make_task(tax)
+    elif protocol == 'classification-anchors/v13r2':
+        from .classification_v13r2 import make_task
+        tasks['classification'] = make_task(tax)
+    elif protocol != 'classification-offsets/v1':
+        raise ValueError('unsupported_classification_protocol')
+    if config.get('extraction_input_protocol') == 'extraction-compact/v2':
+        from .extraction_view import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-anchors/v3':
+        from .extraction_v5 import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-surfaces/v4':
+        from .extraction_v6 import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-pointers/v5':
+        from .extraction_v7 import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-pointers/v6':
+        from .extraction_v8 import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-local-quotes/v7':
+        from .extraction_v9 import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-quote-options/v8':
+        from .extraction_v10 import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-page-regions/v13':
+        from .extraction_v13 import make_task
+        tasks['extraction'] = make_task(tax)
+    elif config.get('extraction_input_protocol') == 'extraction-page-regions/v13r2':
+        from .extraction_v13r2 import make_task
+        tasks['extraction'] = make_task(tax)
+    return tasks
 
 
 def corpus_errors(corpus: dict) -> list[str]:
@@ -137,7 +204,7 @@ def plan_jobs(config: dict, corpus: dict, *, tasks: dict | None = None) -> dict:
     for kind, task in tasks.items():
         if task_errors(task):
             raise ValueError(task_errors(task))
-        if task["kind"] != kind or task["output_schema"] != load_task(kind)["output_schema"]:
+        if task["kind"] != kind or task["output_schema"] != tasks_for_config(config)[kind]["output_schema"]:
             raise ValueError("unsupported_task_output_contract_requires_versioned_validator")
     if tasks["classification"]["taxonomy"] != tasks["extraction"]["taxonomy"]:
         raise ValueError("task taxonomy mismatch")
@@ -153,10 +220,22 @@ def plan_jobs(config: dict, corpus: dict, *, tasks: dict | None = None) -> dict:
                      "parameters": copy.deepcopy(parameters), "replicate_id": replicate_id,
                      "task_sha256": tasks["classification" if kind == "classification" else "extraction"]["task_sha256"],
                      "dependencies": dependencies}
+            if kind != 'classification' and config.get('extraction_input_protocol') in GROUPED_PROTOCOLS:
+                value['grouping'] = copy.deepcopy(config['extraction_grouping'])
+            if config['execution'].get('grouped_mode') == 'all-groups/v1':
+                value['group_execution'] = {'version': 'all-groups/v1',
+                    'max_attempts': config['execution']['max_attempts'],
+                    'retry_statuses': copy.deepcopy(config['execution']['retry_statuses'])}
             value["job_id"] = digest(value)
             jobs.append(value)
             return value["job_id"]
         cid = job("classification", config["classification"].get("profile_id"), config["classification"]["parameters"], None, [])
+        if config['classification'].get('protocol') in {'classification-quotes/v2', 'classification-anchors/v3', 'classification-anchors/v13r2'}:
+            # Grouping is a scientific input condition, not merely scheduler placement.
+            current = jobs[-1]
+            current['grouping'] = copy.deepcopy(config['classification']['grouping'])
+            current['job_id'] = digest({k: v for k, v in current.items() if k != 'job_id'})
+            cid = current['job_id']
         for profile_id in config["roles"]["locals"]:
             for rep in config["replicates"]:
                 job("local_extraction", profile_id, {**config["local_parameters"], "seed": rep["seed"]}, rep["replicate_id"], [cid])
@@ -209,11 +288,126 @@ bound to this exact request. Synthetic mock counts are never called model tokens
             "output_allowance": cap, "context_window": profile["context_window"]}
 
 
+def _classification_v2(task):
+    return (task.get('kind') == 'classification'
+            and task.get('admission_rules_version') in {'classification-quotes/v2', 'classification-anchors/v3', 'classification-anchors/v13r2'})
+
+
+def _classification_module(task):
+    if task.get('admission_rules_version') == 'classification-anchors/v13r2':
+        from . import classification_v13r2
+        return classification_v13r2
+    if task.get('admission_rules_version') == 'classification-anchors/v3':
+        from . import classification_v3
+        return classification_v3
+    from . import classification_v2
+    return classification_v2
+
+
+def _envelope_v2(task):
+    return _grouped_extraction(task) or _classification_v2(task) or (task.get('schema_version') == 'four-category-task/v3'
+                                      and task.get('admission_rules_version') == 'extraction-compact/v2')
+
+
+def _extraction_v5(task):
+    return task.get('schema_version') == 'four-category-task/v5' and task.get('admission_rules_version') == 'extraction-anchors/v3'
+
+
+def _extraction_v6(task):
+    return task.get('schema_version') == 'four-category-task/v6' and task.get('admission_rules_version') == 'extraction-surfaces/v4'
+
+
+def _grouped_extraction(task):
+    return (_extraction_v5(task) or _extraction_v6(task) or
+            (task.get('schema_version') == 'four-category-task/v13' and
+             task.get('admission_rules_version') == 'extraction-page-regions/v13') or
+            (task.get('schema_version') == 'four-category-task/v13r2' and
+             task.get('admission_rules_version') == 'extraction-page-regions/v13r2') or
+            (task.get('schema_version') == 'four-category-task/v7' and
+             task.get('admission_rules_version') == 'extraction-pointers/v5') or
+            (task.get('schema_version') == 'four-category-task/v8' and
+             task.get('admission_rules_version') == 'extraction-pointers/v6') or
+            (task.get('schema_version') == 'four-category-task/v9' and
+             task.get('admission_rules_version') == 'extraction-local-quotes/v7') or
+            (task.get('schema_version') == 'four-category-task/v10' and
+             task.get('admission_rules_version') == 'extraction-quote-options/v8'))
+
+
+def _response_schema(task, paper_input, index, extraction_group, classification_group=None):
+    if _grouped_extraction(task):
+        return extraction_module(task).response_schema(task, paper_input, index, extraction_group)
+    if task.get('admission_rules_version') == 'classification-anchors/v13r2':
+        if classification_group is None or extraction_group is not None:
+            raise ValueError('classification_group_required_without_extraction_group')
+        return _classification_module(task).response_schema(task, paper_input, classification_group)
+    return None
+
+
+def _render_request(task, paper_input, index, group, extraction_group=None):
+    if _grouped_extraction(task):
+        if group is not None or extraction_group is None:
+            raise ValueError('extraction_group_required_without_classification_group')
+        return extraction_module(task).render_group(task, paper_input, index, extraction_group)
+    if extraction_group is not None:
+        raise ValueError('legacy_task_cannot_accept_extraction_group')
+    if _classification_v2(task):
+        if group is None:
+            raise ValueError('classification_group_required')
+        return _classification_module(task).render_group(task, paper_input, group)
+    if group is not None:
+        raise ValueError('legacy_task_cannot_accept_classification_group')
+    return render_task(task, paper_input, index)
+
+
+def _parse_response(task, raw, paper_input, group, layout, reading_text, *, index=None, extraction_group=None):
+    payload, normalization, checks = None, None, []
+    try:
+        if _grouped_extraction(task):
+            module = extraction_module(task)
+            payload, normalization = module.parse_response(raw)
+            checks = module.validate_response(payload, paper_input, index, extraction_group, task=task)
+        elif _classification_v2(task):
+            module = _classification_module(task)
+            payload, normalization = module.parse_response(raw)
+            checks = module.validate_response(payload, paper_input, group)
+        elif _envelope_v2(task):
+            from .classification_v2 import parse_response
+            payload, normalization = parse_response(raw)
+            checks = extraction_errors(payload, paper_input, layout=layout, reading_text=reading_text)
+        else:
+            payload = strict_json(raw)
+            checks = classification_errors(payload, paper_input) if task['kind'] == 'classification' else extraction_errors(payload, paper_input, layout=layout, reading_text=reading_text)
+    except (ValueError, TypeError, KeyError) as exc:
+        checks = ['response_parse:' + str(exc)]
+    return payload, normalization, checks
+
+
+def _admission_status(task, payload, checks, extraction_group=None, paper_input=None):
+    if checks:
+        return 'contract_invalid'
+    if _extraction_v5(task):
+        from .extraction_v5 import completion_status
+        return completion_status(payload)
+    if _grouped_extraction(task):
+        module = extraction_module(task)
+        if task.get('schema_version') in {'four-category-task/v13', 'four-category-task/v13r2'}:
+            return module.completion_status(payload, extraction_group, paper_input)
+        return module.completion_status(payload, extraction_group)
+    return 'success'
+
+
 def replay_run(record: dict, task: dict, paper_input: dict, *, index: dict | None = None,
-               layout: dict | None = None, reading_text: str | None = None) -> list[str]:
+               layout: dict | None = None, reading_text: str | None = None,
+               classification_group: dict | None = None, extraction_group: dict | None = None) -> list[str]:
     errors = seal_errors(record, "record_sha256")
     try:
-        messages = render_task(task, paper_input, index)
+        group = classification_group if classification_group is not None else record.get('classification_group')
+        eg = extraction_group if extraction_group is not None else record.get('extraction_group')
+        messages, schema = production_request(task, paper_input, index, group, eg)
+        if _grouped_extraction(task) and (record.get('extraction_group') != eg or record['job'].get('extraction_group') != eg):
+            errors.append('extraction_group_identity_mismatch')
+        if _classification_v2(task) and record.get('classification_group') != group:
+            errors.append('classification_group_identity_mismatch')
         if record["task"] != task or record["messages"] != messages or record["request_sha256"] != digest(messages):
             errors.append("request_derivation_mismatch")
         if record["profile_sha256"] != profile_hash(record["profile"]):
@@ -246,23 +440,25 @@ def replay_run(record: dict, task: dict, paper_input: dict, *, index: dict | Non
                     or not isinstance(budget["input_tokens"], int) or budget["input_tokens"] < 0
                     or budget["input_tokens"] + budget["output_allowance"] > budget["context_window"]):
                 errors.append("context_budget_binding_mismatch")
-            errors.extend(backend_record_errors(result, record["profile"], messages, record["job"]["parameters"]))
+            response_args = {'response_schema': schema} if schema is not None else {}
+            errors.extend(backend_record_errors(result, record["profile"], messages, record["job"]["parameters"], **response_args))
         elif result.get("dispatch_started") or result.get("request") is not None or result["status"] != "invalid_request":
             errors.append("blocked_context_has_dispatch")
         # Failed transport attempts are authentic missing generations, not empty schemas.
         if result["status"] == "success":
-            try:
-                payload = strict_json(result["raw_text"])
-                checks = classification_errors(payload, paper_input) if task["kind"] == "classification" else extraction_errors(payload, paper_input, layout=layout, reading_text=reading_text)
-            except (ValueError, TypeError, KeyError) as exc:
-                payload, checks = None, ["response_parse:" + str(exc)]
+            payload, normalization, checks = _parse_response(task, result['raw_text'], paper_input, group, layout, reading_text,
+                                                            index=index, extraction_group=eg)
+            if _envelope_v2(task) and record.get('response_normalization') != normalization:
+                errors.append('response_normalization_replay_mismatch')
             if record["parsed_response"] != payload or record["validation_errors"] != checks:
                 errors.append("raw_response_replay_mismatch")
-            expected = "success" if not checks else "contract_invalid"
+            expected = _admission_status(task, payload, checks, eg, paper_input)
         else:
             expected = result["status"]
             if record["parsed_response"] is not None:
                 errors.append("failed_generation_has_payload")
+            if _envelope_v2(task) and record.get('response_normalization') is not None:
+                errors.append('failed_generation_has_normalization')
         if record["status"] != expected:
             errors.append("run_status_replay_mismatch")
     except (KeyError, TypeError, ValueError, IndexError) as exc:
@@ -270,9 +466,16 @@ def replay_run(record: dict, task: dict, paper_input: dict, *, index: dict | Non
     return errors
 
 
+def production_request(task, paper_input, index=None, classification_group=None, extraction_group=None):
+    """Return exactly the messages and runtime schema used by generation and replay."""
+    messages = _render_request(task, paper_input, index, classification_group, extraction_group)
+    schema = _response_schema(task, paper_input, index, extraction_group, classification_group)
+    return messages, schema
+
+
 def _attempt(job, profile, task, paper_input, index, layout, reading_text, number, *, allow_live, transport, counter,
-             token_transport=None):
-    messages = render_task(task, paper_input, index)
+             token_transport=None, classification_group=None, extraction_group=None):
+    messages, schema = production_request(task, paper_input, index, classification_group, extraction_group)
     try:
         budget = context_preflight(profile, messages, job["parameters"], counter, allow_live=allow_live,
                                    token_transport=token_transport)
@@ -284,17 +487,20 @@ def _attempt(job, profile, task, paper_input, index, layout, reading_text, numbe
                   "requested_parameters": job["parameters"], "dispatch_started": False, "live_request_started": False,
                   "execution_mode": "mock" if profile["backend"] == "mock" else "injected_transport" if transport else "live"}
     else:
-        result = invoke(profile, messages, job["parameters"], allow_live=allow_live, transport=transport)
-    payload, checks = None, []
+        response_args = {'response_schema': schema} if schema is not None else {}
+        result = invoke(profile, messages, job["parameters"], allow_live=allow_live, transport=transport, **response_args)
+    payload, normalization, checks = None, None, []
     if result["status"] == "success":
-        try:
-            payload = strict_json(result["raw_text"])
-            checks = classification_errors(payload, paper_input) if task["kind"] == "classification" else extraction_errors(payload, paper_input, layout=layout, reading_text=reading_text)
-        except (ValueError, TypeError, KeyError) as exc:
-            checks = ["response_parse:" + str(exc)]
+        payload, normalization, checks = _parse_response(task, result['raw_text'], paper_input, classification_group, layout, reading_text,
+                                                        index=index, extraction_group=extraction_group)
     condition = {"job_id": job["job_id"], "index_sha256": index["index_sha256"] if index else None}
-    status = ("contract_invalid" if checks else "success") if result["status"] == "success" else result["status"]
-    return seal({"schema_version": "four-category-run/v1", "run_id": digest({**condition, "attempt": number}),
+    status = _admission_status(task, payload, checks, extraction_group, paper_input) if result["status"] == "success" else result["status"]
+    extra = {'response_normalization': normalization} if _envelope_v2(task) else {}
+    if _classification_v2(task):
+        extra['classification_group'] = classification_group
+    if _grouped_extraction(task):
+        extra['extraction_group'] = extraction_group
+    return seal({**extra, "schema_version": "four-category-run/v1", "run_id": digest({**condition, "attempt": number}),
                  "created_at_utc": now(), "attempt": number, "job": job, "profile": profile,
                  "profile_sha256": profile_hash(profile), "task": task, "paper_input_canonical_sha256": digest(paper_input),
                  "index_sha256": condition["index_sha256"], "messages": messages, "request_sha256": digest(messages),
@@ -306,6 +512,10 @@ def _attempt(job, profile, task, paper_input, index, layout, reading_text, numbe
 def run_batch(config: dict, corpus: dict, *, source_root: Path, output: Path, tasks: dict | None = None,
               transports: dict | None = None, token_counter: Callable | None = None,
               allow_live: bool = False, max_jobs: int | None = None, token_transports: dict | None = None) -> dict:
+    if config.get('extraction_input_protocol') in GROUPED_PROTOCOLS:
+        return {'status': 'blocked', 'errors': ['grouped_extraction_requires_resident_scheduler'], 'model_calls': 0}
+    if config.get('classification', {}).get('protocol') in {'classification-quotes/v2', 'classification-anchors/v3', 'classification-anchors/v13r2'}:
+        return {'status': 'blocked', 'errors': ['grouped_classification_requires_resident_scheduler'], 'model_calls': 0}
     errors = experiment_errors(config, execution=True) + corpus_errors(corpus)
     if errors:
         return {"status": "blocked", "errors": errors, "model_calls": 0}

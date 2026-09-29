@@ -4,6 +4,12 @@
 
 This guide uses the public `williamQ96/schema_study` repository layout. See the [user guide](schema_study_user_guide.md) for input preparation and packet operations. Shell examples use Linux/Bash.
 
+The pinned `0.1.0-cuda13` image and the `git checkout v0.1.0` instructions below
+reproduce the earlier release. They do not include the later V13 revision-2
+source or Scheduler V2. Use the [V13 source status](v13_source_status_2026-09-28.md)
+when reviewing that code; build and qualify a separately identified image
+before running it. No new public image is claimed by this source update.
+
 ## 1. Deployment contents and host requirements
 
 | Item | Release configuration |

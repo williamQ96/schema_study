@@ -13,7 +13,10 @@ jobs:
           cache: pip
           cache-dependency-path: requirements_four_category_offline.txt
       - run: python -m pip install -r requirements_four_category_offline.txt
+      - run: python scripts/source_export_manifest.py verify
       - run: python -m pytest -q tests --junitxml=offline-tests.xml
+        env:
+          PYTHONPATH: .:scripts
       - run: python -m high_fidelity_schema_study.four_category.cli offline-demo --output local-results/ci-demo
       - uses: actions/upload-artifact@v4
         if: always()

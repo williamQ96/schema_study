@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-evidence-input/v6",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "paper_id", "source_pdf_sha256", "layout_preprocessing_sha256", "span_conventions", "pages", "model_input_sha256"],
+  "properties": {
+    "schema_version": {"const": "paper-evidence-input/v6"},
+    "paper_id": {"type": "string", "minLength": 1},
+    "source_pdf_sha256": {"$ref": "#/$defs/sha"},
+    "layout_preprocessing_sha256": {"$ref": "#/$defs/sha"},
+    "model_input_sha256": {"$ref": "#/$defs/sha"},
+    "span_conventions": {"type": "object"},
+    "pages": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["page", "layout_mode", "text_regions", "tables"], "properties": {
+      "page": {"type": "integer", "minimum": 1}, "layout_mode": {"type": "string", "minLength": 1},
+      "text_regions": {"type": "array", "items": {"$ref": "#/$defs/unit"}},
+      "tables": {"type": "array", "items": {"$ref": "#/$defs/table"}}
+    }}}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "span": {"type": "object", "additionalProperties": false, "required": ["start", "end"], "properties": {
+      "start": {"type": "integer", "minimum": 0}, "end": {"type": "integer", "minimum": 0}
+    }},
+    "bbox": {"type": ["array", "null"], "minItems": 4, "maxItems": 4, "items": {"type": "number"}},
+    "unit": {"type": "object", "required": ["unit_id", "page", "region_kind", "reading_order", "bbox", "text", "text_origin", "document_char_span", "document_token_span"], "properties": {
+      "unit_id": {"type": "string", "minLength": 1}, "page": {"type": "integer", "minimum": 1},
+      "region_kind": {"type": "string", "minLength": 1}, "reading_order": {"type": "integer", "minimum": 0},
+      "bbox": {"$ref": "#/$defs/bbox"}, "text": {"type": "string"},
+      "text_origin": {"enum": ["mineru_recognized", "native_baseline_recovery"]},
+      "document_char_span": {"$ref": "#/$defs/span"}, "document_token_span": {"$ref": "#/$defs/span"}
+    }},
+    "table": {"type": "object", "required": ["table_id", "caption", "header_units", "columns", "rows", "bbox", "structure_status", "source_origin"], "properties": {
+      "table_id": {"type": "string", "minLength": 1}, "caption": {"$ref": "#/$defs/unit"},
+      "header_units": {"type": "array", "items": {"$ref": "#/$defs/unit"}},
+      "columns": {"type": "array", "items": {"type": "object", "required": ["column_index", "header"], "properties": {
+        "column_index": {"type": "integer", "minimum": 0}, "header": {"type": "string"}
+      }}},
+      "rows": {"type": "array", "items": {"type": "object", "required": ["row_id", "unit_id", "text", "cells", "document_char_span", "document_token_span"], "properties": {
+        "row_id": {"type": "string", "minLength": 1}, "unit_id": {"type": "string", "minLength": 1},
+        "text": {"type": "string"}, "document_char_span": {"$ref": "#/$defs/span"},
+        "document_token_span": {"$ref": "#/$defs/span"}, "cells": {"type": "array", "items": {"$ref": "#/$defs/unit"}}
+      }}},
+      "bbox": {"$ref": "#/$defs/bbox"}, "structure_status": {"type": "string", "minLength": 1},
+      "source_origin": {"enum": ["mineru_recognized", "native_baseline_recovery"]}
+    }}
+  }
+}

@@ -1,0 +1,19 @@
+TASK
+Create a paper-derived dataset schema for the supplied scientific paper.
+
+SOURCE IDENTITY
+{{SOURCE_IDENTITY_JSON}}
+
+TARGET JSON SCHEMA
+{{TARGET_JSON_SCHEMA}}
+
+PAPER BLOCKS
+{{PAPER_BLOCKS_JSON}}
+
+OUTPUT REQUIREMENTS
+1. Output exactly one JSON object and no prose or markdown.
+2. Use only block_id values and text present in PAPER BLOCKS.
+3. Every supported, inferred, or conflicted claim must contain at least one evidence locator.
+4. Never invent canonical_path. Use null unless the paper explicitly supplies it.
+5. Keep analytical_role separate from structural attributes.
+6. If the paper does not support a property, use unknown/null or omit the candidate; do not fill it from general knowledge.

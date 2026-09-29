@@ -1,0 +1,5 @@
+# Isolated Basic/ONNX CPU parser environment; never merge into inference SIF.
+mineru==4.0.8
+docvortex==0.5.2
+# The runner records this installed runtime version in every parser identity.
+onnxruntime==1.30.0

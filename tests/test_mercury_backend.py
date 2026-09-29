@@ -159,7 +159,8 @@ def test_fake_generation_records_observed_placement_and_releases_cache(monkeypat
     item = profile()
     item["runtime"]["settings"] = {"device_map": "auto", "dtype": "bfloat16", "trust_remote_code": True}
     result = invoke(item, MESSAGES, {"max_output_tokens": 2, "do_sample": True, "seed": 7}, allow_live=True)
-    assert result["status"] == "success", result["errors"]
+    # Exhausting the exact output-token budget is not a confirmed clean stop.
+    assert result["status"] == "truncated", result["errors"]
     assert loaded["tokenizer"]["trust_remote_code"] is True and loaded["model"]["dtype"] is fake_torch.bfloat16
     assert loaded["seed"] == 7 and loaded["empty_cache_calls"] == 1
     identity = result["runtime_identity"]

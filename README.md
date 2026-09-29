@@ -4,6 +4,12 @@
 
 Paper–dataset schema evidence pipeline: **structure, encoding, value, syntax**.
 
+The dataset path applies all four categories to evidence from dataset files and
+declared metadata, independently of the paper models. Facts retain their source,
+reading scope, and `declared` / `observed` / `inferred` basis. The paper path
+uses the same taxonomy for navigation before extraction. See the
+[dataset architecture and version history](docs/dataset_four_category_architecture.md).
+
 The paper workflow retains the full layout-aware text and freezes a shared classification index and task specification for three interchangeable local models and one frontier soft reference. The dataset workflow independently produces evidence through format parsers. Both paths meet in an evaluation packet, ending at an integrity and provenance gate. A soft reference is fallible; passing this gate does not establish semantic accuracy.
 
 ## Start here
@@ -19,6 +25,12 @@ The paper workflow retains the full layout-aware text and freezes a shared class
 - Image: `plalelab/schema-study:0.1.0-cuda13` (Linux amd64)
 - Image digest and release records: [Releases](https://github.com/williamQ96/schema_study/releases).
 - Release validation: [113 passing Linux container tests and the complete offline workflow](docs/release-validation-v0.1.0.json).
+
+The Docker image and the v0.1.0 tag describe the **previous frozen release**.
+This branch also contains the V13 source snapshot and Scheduler V2. The current
+V13 repair candidate is undergoing GPU output qualification; it is not in the
+0.1.0 image and is not a completed fidelity evaluation. See the
+[V13 source status](docs/v13_source_status_2026-09-28.md).
 
 ## Five-minute offline check
 
@@ -48,6 +60,8 @@ container/
   apptainer/             # SIF recipe, build script and bind-mount launcher
 docs/                    # English guides and optional Chinese translations
 tests/                   # Synthetic and mock software tests
+scripts/                 # V13 qualification and operational helpers
+scheduler_v2/            # Group dispatch, recovery, verification and queue health
 source-export-manifest.json # File-byte SHA-256 inventory for the current export
 ```
 
@@ -61,7 +75,7 @@ cd schema_study
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements_four_category_offline.txt
-python -m pytest -q tests
+PYTHONPATH=.:scripts python -m pytest -q tests
 python -m high_fidelity_schema_study.four_category.cli --help
 ```
 
@@ -73,5 +87,5 @@ The offline dependencies support parsing, mock demos and software tests. Real Tr
 - Model backends: Transformers, OpenAI-compatible Chat Completions and Responses. Profiles select the models; unsupported parameters are explicitly rejected.
 - `run` verifies the model configuration, source code, SIF, checkpoint and hardware before dispatch. Sources and results retain their identities, and failures are isolated per task.
 - Mercury targets 4×H200 NVL. Its actual GPUs, driver, model context limits and throughput still require qualification on that machine. Offline software validation does not establish hardware readiness or research effectiveness.
-- The current runner is serial, with three repetitions per local model by default. Repetitions describe variation; they do not eliminate model bias or randomness.
-- Example profiles remain drafts. Placeholder models cannot launch a formal experiment. This release did not execute new model experiments or produce human annotations.
+- The v0.1.0 CLI runner is serial. V13 adds a separate Scheduler V2 path with group-level dispatch; the ten-paper production rerun remains paused until the current output qualification passes. Three repetitions describe variation; they do not eliminate model bias or randomness.
+- Example profiles remain drafts. The V13 source snapshot does not publish private source data, model weights, credentials, human annotations, or a new Docker image.

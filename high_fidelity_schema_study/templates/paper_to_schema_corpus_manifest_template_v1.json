@@ -1,0 +1,36 @@
+{
+  "schema_version": "paper-to-schema-corpus-manifest/v1",
+  "status": "draft",
+  "selection_protocol_hash": null,
+  "papers": [
+    {
+      "paper_id": "P01",
+      "title": null,
+      "doi": null,
+      "peer_review_venue": null,
+      "paper_version": null,
+      "paper_url": null,
+      "paper_sha256": null,
+      "preprocessing_artifact": null,
+      "preprocessing_sha256": null,
+      "kaggle_slug": null,
+      "kaggle_url": null,
+      "dataset_version": null,
+      "dataset_artifact_sha256": null,
+      "license": null,
+      "paper_dataset_link_evidence": [],
+      "main_paper_only_eligible": null,
+      "inclusion_decision": "pending",
+      "exclusion_codes": []
+    }
+  ],
+  "freeze_requirements": [
+    "Exactly ten unique included pairs",
+    "Peer-reviewed paper identity verified",
+    "Exact paper-dataset relationship verified",
+    "PDF and dataset versions hashed",
+    "License recorded",
+    "Main paper is sufficient without supplement",
+    "No test pair was used for prompt or parameter tuning"
+  ]
+}

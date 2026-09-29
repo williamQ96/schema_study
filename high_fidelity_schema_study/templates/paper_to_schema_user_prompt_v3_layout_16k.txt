@@ -1,0 +1,24 @@
+TASK
+Create one evidence-linked paper-derived dataset schema from the supplied scientific paper.
+
+SOURCE IDENTITY
+{{SOURCE_IDENTITY_JSON}}
+
+TARGET JSON SCHEMA
+{{TARGET_JSON_SCHEMA}}
+
+LAYOUT-AWARE PAPER EVIDENCE UNITS
+{{PAPER_BLOCKS_JSON}}
+
+FINAL CONTRACT CHECK
+1. Return exactly one complete paper-derived-schema/v3 JSON object without reasoning or commentary.
+2. Copy SOURCE IDENTITY exactly into source_document, using paper_id as document_id.
+3. Use only supplied unit_id values, pages, and exact whitespace-normalized quote substrings.
+4. Use only the enumerated status values; supported is legal only for claim_state.
+5. datatype and shape_or_dimensions are required typed objects, never null.
+6. parent_claim_id and relationship.target_claim_id reference claim_id values in this response.
+7. evidence.supports uses only the target schema's fixed pointer vocabulary.
+8. Never invent canonical_path; use null unless it is explicitly reported in the paper.
+9. Emit one claim per distinct named structural object and normally one strongest evidence item per claim.
+10. Do not generate character/token offsets; they are deterministically resolved after generation.
+11. Close the complete JSON object within 16384 generated tokens.

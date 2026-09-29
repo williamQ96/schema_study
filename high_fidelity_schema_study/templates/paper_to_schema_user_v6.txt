@@ -1,0 +1,12 @@
+TASK: Extract atomic paper-reported schema observations from the target source windows.
+SOURCE IDENTITY
+{{SOURCE_IDENTITY_JSON}}
+TAXONOMY
+{{TAXONOMY_JSON}}
+GROUP RESPONSE SCHEMA
+{{TARGET_SCHEMA_JSON}}
+FULL PAPER WITH UNIT-LOCAL QUOTE OPTIONS AND FROZEN FALLIBLE INDEX
+{{FULL_SOURCE_JSON}}
+TARGET GROUP
+{{TARGET_GROUP_JSON}}
+Include a coverage row for every target window in its given order. A fact belongs to a target window through its primary_anchor; emit no facts for an overflow window. Names and supporting evidence can refer to any supplied quote option, but each mention name and relationship target name must be an exact substring of its cited quote. subject_mention is a zero-based index into this response's mentions array. relationship and same_as facts require target; every other predicate requires target=null. status=unknown if and only if value=null; status=inferred requires a nonempty basis. Return mentions and facts within the response-schema limits.

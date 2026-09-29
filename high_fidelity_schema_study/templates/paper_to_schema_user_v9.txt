@@ -1,0 +1,12 @@
+TASK: Extract atomic paper-reported schema observations from the assigned source windows.
+SOURCE IDENTITY
+{{SOURCE_IDENTITY_JSON}}
+TAXONOMY
+{{TAXONOMY_JSON}}
+FULL PAPER WITH GLOBALLY NUMBERED UNITS AND WINDOWS, PLUS FROZEN FALLIBLE INDEX
+{{FULL_SOURCE_JSON}}
+GROUP RESPONSE SCHEMA
+{{TARGET_SCHEMA_JSON}}
+TARGET GROUP FOCUS: assigned windows and their exact text
+{{TARGET_GROUP_JSON}}
+Include exactly one coverage row per target window in the supplied order. `subject_mention` is a zero-based index into this response's mentions array. An attribute claim has no target; a parent, relationship or same_as link claim requires a target with one or more source_windows. Assertion status reported/inferred requires a nonempty string value; unknown requires null. Inferred assertions require a nonempty basis. Use only source-window numbers present in the full paper, and primary_window numbers assigned to this group. Each fact requires primary_quote copied exactly from its primary_window text, including capitalization and spacing. A quote found only in a support window is invalid. A group with no locally supported schema observations may return empty mentions and facts after review. Use overflow, not uncertain, for capacity limits. Stay below both mention and fact caps: reaching either cap makes this group incomplete.

@@ -2,6 +2,8 @@
 pytest>=8,<10
 jsonschema>=4.23,<5
 pdfplumber==0.11.9
+# Visibility-ledger replay binds both this wrapper and the actual PDFium build.
+pypdfium2==5.13.0
 openpyxl>=3.1,<4
 numpy>=2.2,<3
 h5py>=3.14,<4

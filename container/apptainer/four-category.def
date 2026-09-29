@@ -7,6 +7,7 @@ From: {{ CUDA_IMAGE }}
 %files
     requirements-phase1-inference.txt /opt/requirements/requirements-phase1-inference.txt
     requirements_four_category_offline.txt /opt/requirements/requirements_four_category_offline.txt
+    requirements_four_category_structured.txt /opt/requirements/requirements_four_category_structured.txt
 
 %post
     set -eu
@@ -27,7 +28,8 @@ From: {{ CUDA_IMAGE }}
     /opt/four-category-venv/bin/python -m pip install --no-cache-dir --upgrade pip setuptools wheel
     /opt/four-category-venv/bin/python -m pip install --no-cache-dir \
         -r /opt/requirements/requirements-phase1-inference.txt \
-        -r /opt/requirements/requirements_four_category_offline.txt
+        -r /opt/requirements/requirements_four_category_offline.txt \
+        -r /opt/requirements/requirements_four_category_structured.txt
     /opt/four-category-venv/bin/python -m pip freeze --all > /opt/requirements/pip-freeze.txt
 
 %environment
@@ -56,4 +58,4 @@ From: {{ CUDA_IMAGE }}
 
 %test
     python -m pip check
-    python -c 'import torch, transformers, jsonschema, pdfplumber, openpyxl, numpy, h5py, scipy, pyarrow; print("runtime imports OK")'
+    python -c 'import torch, transformers, jsonschema, pdfplumber, pypdfium2, openpyxl, numpy, h5py, scipy, pyarrow, xgrammar; print("runtime imports OK; PDFium", pypdfium2.PDFIUM_INFO)'

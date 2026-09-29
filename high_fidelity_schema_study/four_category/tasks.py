@@ -9,6 +9,7 @@ import jsonschema
 
 from .common import ROOT, canonical_bytes, digest, read_json, seal, seal_errors, taxonomy
 from .paper import categorized_input, source_identity, unit_catalog
+from .evidence_schema import validate_paper_input
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,70 @@ def task_errors(task: dict) -> list[str]:
     errors = seal_errors(task, "task_sha256")
     if errors:
         return errors
+    if task.get('schema_version') == 'four-category-task/v13r2' and task.get('kind') == 'extraction':
+        from .extraction_v13r2 import task_errors as v13r2_errors
+        return v13r2_errors(task)
+    if task.get('schema_version') == 'four-category-task/v13':
+        from .extraction_v13 import task_errors as v13_errors
+        return v13_errors(task)
+    if task.get('schema_version') == 'four-category-task/v10':
+        from .extraction_v10 import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_extraction_v10_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_extraction_v10_task']
+    if task.get('schema_version') == 'four-category-task/v9':
+        from .extraction_v9 import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_extraction_v9_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_extraction_v9_task']
+    if task.get('schema_version') == 'four-category-task/v8':
+        from .extraction_v8 import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_extraction_v8_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_extraction_v8_task']
+    if task.get('schema_version') == 'four-category-task/v7':
+        from .extraction_v7 import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_extraction_v7_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_extraction_v7_task']
+    if task.get('schema_version') == 'four-category-task/v6':
+        from .extraction_v6 import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_extraction_v6_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_extraction_v6_task']
+    if task.get('schema_version') == 'four-category-task/v5':
+        from .extraction_v5 import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_extraction_v5_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_extraction_v5_task']
+    if task.get('schema_version') == 'four-category-task/v13r2' and task.get('kind') == 'classification':
+        from .classification_v13r2 import task_errors as classification_task_errors
+        return classification_task_errors(task)
+    if task.get('schema_version') == 'four-category-task/v4':
+        from .classification_v3 import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_classification_v3_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_classification_v3_task']
+    if task.get('schema_version') == 'four-category-task/v3':
+        from .extraction_view import make_task
+        try:
+            return [] if task == make_task(task['taxonomy']) else ['unsupported_extraction_v2_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_extraction_v2_task']
+    if task.get('schema_version') == 'four-category-task/v2':
+        from .classification_v2 import make_task
+        try:
+            expected = make_task(task['taxonomy'])
+            return [] if task == expected else ['unsupported_classification_v2_task']
+        except (KeyError, TypeError, ValueError):
+            return ['invalid_classification_v2_task']
     kind = task.get("kind")
     if kind not in {"classification", "extraction"}:
         return ["unsupported_task_kind"]
@@ -56,8 +121,11 @@ def task_errors(task: dict) -> list[str]:
 def render_task(task: dict, paper_input: dict, index: dict | None = None) -> list[dict]:
     if task_errors(task):
         raise ValueError("task identity mismatch")
+    if task.get('schema_version') == 'four-category-task/v3':
+        from .extraction_view import render_task_v2
+        return render_task_v2(task, paper_input, index)
     # Reject unrelated extra top-level data; input itself must be a validated projection.
-    jsonschema.validate(paper_input, read_json(ROOT / "templates/paper_evidence_input_v3.schema.json"))
+    validate_paper_input(paper_input)
     values = {"TAXONOMY_JSON": task["taxonomy"], "TARGET_SCHEMA_JSON": task["output_schema"],
               "SOURCE_IDENTITY_JSON": source_identity(paper_input)}
     if task["kind"] == "classification":

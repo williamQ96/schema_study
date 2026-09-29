@@ -1,0 +1,11 @@
+TASK: Extract the paper-reported schema using the shared four-category task.
+SOURCE IDENTITY
+{{SOURCE_IDENTITY_JSON}}
+TAXONOMY
+{{TAXONOMY_JSON}}
+OUTPUT CONTRACT
+{{TARGET_SCHEMA_JSON}}
+EVIDENCE-TEXT-COMPLETE PAPER AND FROZEN AUTOMATED CATEGORY NAVIGATION
+{{COMPACT_CATEGORIZED_INPUT_JSON}}
+Every paper evidence unit is present with its exact text, ID, page, kind, reading order and available bounding box. Page and table relationships are preserved. The category state and labels are fallible navigation only. Audit metadata and classification quotes are omitted from this request view but remain bound to the immutable source and index by hashes. Inspect all relevant paper evidence, including units labeled none; disagree with category labels when warranted. Unsupported assertions remain unknown.
+Return one complete JSON object conforming to the supplied output contract. One whole json code fence is accepted, but do not add prose or other text.

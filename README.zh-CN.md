@@ -6,6 +6,8 @@ Paper–dataset schema evidence pipeline: **structure, encoding, value, syntax**
 
 论文侧保留 layout-aware 全文，冻结共享分类索引和任务规范，供三个可替换的本地模型及一个 frontier soft reference 使用。Dataset 侧由格式解析器独立生成四类证据。两条路径在 evaluation packet 汇合，终点是完整性与来源验证；soft reference 不作为 gold，验证通过也不代表语义准确率。
 
+版本事实：v0.1.0 已包含 dataset 四类解析基础接口。本次 V13 源码增加了明确资源范围的 dataset 字段目录、证据重放检查、Scheduler V2 和修订后的 paper 抽取合约。当前 GPU 输出资格测试仍在进行，十篇全量推理尚未重新启动。详见英文 [dataset 架构说明](docs/dataset_four_category_architecture.md) 与 [V13 状态](docs/v13_source_status_2026-09-28.md)；Docker Hub 的 `0.1.0-cuda13` 镜像仍属于上一版源码。
+
 ## 从这里开始
 
 | 任务 | 文档 |

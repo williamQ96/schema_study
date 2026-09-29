@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-evidence-input/v5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "paper_id",
+    "source_pdf_sha256",
+    "layout_preprocessing_sha256",
+    "span_conventions",
+    "pages",
+    "model_input_sha256",
+    "visibility_projection"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paper-evidence-input/v5"
+    },
+    "paper_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_pdf_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "layout_preprocessing_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "model_input_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "span_conventions": {
+      "type": "object"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "page",
+          "layout_mode",
+          "text_regions",
+          "tables"
+        ],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "layout_mode": {
+            "type": "string"
+          },
+          "text_regions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/unit"
+            }
+          },
+          "tables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "table_id",
+                "header_units",
+                "rows",
+                "caption"
+              ]
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "visibility_projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_version",
+        "ledger_sha256",
+        "excluded_source_word_count",
+        "retained_visibility_uncertain_word_count",
+        "rule"
+      ],
+      "properties": {
+        "policy_version": {
+          "const": "pdf-character-visibility-ledger/v3"
+        },
+        "ledger_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "excluded_source_word_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retained_visibility_uncertain_word_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer"
+        },
+        "end": {
+          "type": "integer"
+        }
+      }
+    },
+    "unit": {
+      "type": "object",
+      "required": [
+        "unit_id",
+        "page",
+        "region_kind",
+        "reading_order",
+        "bbox",
+        "document_char_span",
+        "document_token_span",
+        "text"
+      ],
+      "properties": {
+        "unit_id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "integer"
+        },
+        "region_kind": {
+          "type": "string"
+        },
+        "column_index": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "reading_order": {
+          "type": "integer"
+        },
+        "bbox": {
+          "type": "array"
+        },
+        "document_char_span": {
+          "$ref": "#/$defs/span"
+        },
+        "document_token_span": {
+          "$ref": "#/$defs/span"
+        },
+        "text": {
+          "type": "string"
+        },
+        "structure_status": {
+          "enum": [
+            "structure_uncertain"
+          ]
+        }
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

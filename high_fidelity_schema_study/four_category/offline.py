@@ -84,8 +84,14 @@ def mock_transport(request: dict) -> dict:
                             "rationale": "Synthetic transport fixture only; not a semantic judgment."})
         result = {"schema_version": "paper-category-response/v1", "source_identity": identity, "entries": entries}
     else:
-        paper_input = _part(user, "FULL PAPER AND FROZEN AUTOMATED CATEGORY INDEX")["paper_input"]
-        unit = next(u for u in unit_catalog(paper_input).values() if "record_id" in u["text"])
+        heading = 'EVIDENCE-TEXT-COMPLETE PAPER AND FROZEN AUTOMATED CATEGORY NAVIGATION'
+        if heading in user:
+            view = _part(user, heading)
+            units = [dict(zip(view['unit_columns'], row)) for row in view['units']]
+        else:
+            paper_input = _part(user, "FULL PAPER AND FROZEN AUTOMATED CATEGORY INDEX")["paper_input"]
+            units = unit_catalog(paper_input).values()
+        unit = next(u for u in units if "record_id" in u["text"])
         unknown = {"value": None, "raw_reported_value": None, "status": "unknown"}
         result = {"schema_version": "paper-derived-schema/v4", "source_document": identity, "notes": ["Synthetic transport fixture; not a model generation."],
                   "claims": [{"claim_id": "record_id", "object_kind": "field", "reported_name": "record_id", "canonical_path": None,

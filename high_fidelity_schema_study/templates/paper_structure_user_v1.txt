@@ -1,0 +1,7 @@
+SOURCE IDENTITY
+{{SOURCE_IDENTITY_JSON}}
+TARGET GROUP AND COMPLETE ASSIGNED SOURCE UNITS
+{{GROUP_SOURCE_JSON}}
+STRUCTURAL RESPONSE SCHEMA
+{{TARGET_SCHEMA_JSON}}
+Give one unit_reviews row for every assigned unit in order. Give one table_roles row per complete assigned table and one column role per declared column, using unknown if evidence is insufficient. Mentions and links may be empty. Every evidence quote must be selected from the listed quote_options of its unit. Context units help interpretation but cannot be cited as assigned evidence.

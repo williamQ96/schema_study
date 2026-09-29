@@ -1,0 +1,56 @@
+{
+  "schema_version": "matrix-scheduler-policy/v1",
+  "max_active_matrices": 2,
+  "poll_s": 1,
+  "heartbeat_s": 5,
+  "max_attempts": 2,
+  "model_affinity_max_wait_s": 300,
+  "host_cpu_threads": 128,
+  "host_ram_bytes": 1099511627776,
+  "workers": [
+    {
+      "worker_id": "gpu-0",
+      "gpu_ids": [
+        "0",
+        "1"
+      ],
+      "cpu_threads": 8,
+      "ram_bytes": 137438953472
+    },
+    {
+      "worker_id": "gpu-1",
+      "gpu_ids": [
+        "2",
+        "3"
+      ],
+      "cpu_threads": 8,
+      "ram_bytes": 137438953472
+    },
+    {
+      "worker_id": "dataset-0",
+      "gpu_ids": [],
+      "cpu_threads": 2,
+      "ram_bytes": 8589934592
+    }
+  ],
+  "defer_soft_reference": true,
+  "health": {
+    "scheduler_heartbeat_s": 90,
+    "worker_heartbeat_s": 90,
+    "load_no_progress_s": 1800,
+    "prefill_no_progress_s": 1800,
+    "decode_no_progress_s": 300,
+    "other_no_progress_s": 1800,
+    "imbalance_hold_s": 300,
+    "ready_wait_s": 1800,
+    "queue_hold_s": 120,
+    "recovery_hold_s": 60,
+    "cooldown_s": 1800,
+    "poll_s": 10,
+    "snapshot_stale_s": 90,
+    "utilization_gap_pct": 60,
+    "utilization_skew_hold_s": 600,
+    "headroom_hold_s": 60
+  },
+  "qualification": null
+}

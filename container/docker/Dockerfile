@@ -33,19 +33,23 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 # Keep the Phase 1 base and dependency layers above byte-identical to the
 # existing runtime so they can reuse its cache without inheriting source files.
 COPY requirements_four_category_offline.txt /opt/requirements/requirements_four_category_offline.txt
+COPY requirements_four_category_structured.txt /opt/requirements/requirements_four_category_structured.txt
 RUN pip install --no-cache-dir -r /opt/requirements/requirements_four_category_offline.txt \
+    && pip install --no-cache-dir -r /opt/requirements/requirements_four_category_structured.txt \
     && pip check \
     && pip freeze --all > /opt/requirements/pip-freeze.txt \
-    && python -c 'import torch, transformers, jsonschema, pdfplumber, openpyxl, numpy, h5py, scipy, pyarrow; print("runtime imports OK")'
+    && python -c 'import torch, transformers, jsonschema, pdfplumber, pypdfium2, openpyxl, numpy, h5py, scipy, pyarrow, xgrammar; print("runtime imports OK; PDFium", pypdfium2.PDFIUM_INFO)'
 
 # Build context is the public repository and contains only its allowlisted
 # package tree; historical research files, datasets, weights, and credentials
 # are not copied into the runtime image.
 COPY high_fidelity_schema_study /workspace/high_fidelity_schema_study
+COPY scheduler_v2 /workspace/scheduler_v2
+COPY scripts /workspace/scripts
 COPY container/docker/entrypoint.sh /usr/local/bin/schema-study
 RUN chmod 0755 /usr/local/bin/schema-study
 
-ARG IMAGE_VERSION=0.1.0
+ARG IMAGE_VERSION=v13-source-unqualified
 ARG SOURCE_REVISION=unknown
 LABEL org.opencontainers.image.title="Schema Study Mercury CUDA runtime" \
       org.opencontainers.image.description="Offline-capable runtime for the public schema-study package; contains no model weights or credentials" \

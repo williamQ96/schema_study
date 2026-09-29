@@ -76,6 +76,14 @@ On the host, copy the generated `paper-source-p01.json` to `$SOURCES/paper-sourc
 
 ## 3. Parse dataset sources independently
 
+The four dataset categories have an explicit evidence contract: `structure`
+describes objects and fields, `encoding` records representation and storage,
+`value` records declared codes and unit semantics, and `syntax` records lexical
+and ordering conventions. A fact may belong to more than one category. The
+parser also records whether support is declared, observed, inferred, or
+unknown. The [dataset architecture note](dataset_four_category_architecture.md)
+explains the new scoped field catalog and its limits.
+
 ### Supported formats and interpretation
 
 The adapter recognizes CSV, TSV, JSON, JSONL/NDJSON, XML, XSD, ARFF, XLSX, HDF5, NetCDF, Parquet and Zarr v2 metadata directories. A format hint can be supplied explicitly. Recognition does not guarantee complete parsing: damaged files, missing dependencies and bounded-reading limits can produce `failed`, `unsupported` or `partial` results while other sources continue. A batch marked `complete` has accounted for its jobs; inspect each source's `status` and `issues` separately.

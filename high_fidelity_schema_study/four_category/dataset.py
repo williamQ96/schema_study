@@ -171,7 +171,7 @@ def _read_delimited(path: Path, fmt: str, limit: int) -> tuple[list[list[str]], 
             sample = handle.read(8192)
     except (OSError, UnicodeDecodeError):
         pass
-    if fmt == "csv":
+    if fmt in {"csv", "csv_no_header"}:
         try:
             dialect = csv.Sniffer().sniff(sample, delimiters=",\t;|")
             delimiter = dialect.delimiter
@@ -193,11 +193,12 @@ def _read_delimited(path: Path, fmt: str, limit: int) -> tuple[list[list[str]], 
                         "delimiter_observed": bool(delimiter and delimiter in sample),
                         "doublequote": dialect.doublequote, "escapechar": dialect.escapechar,
                         "quoting": dialect.quoting, "dialect_basis": dialect_basis}
-    header = rows[0]
-    selected = rows[1:]
-    sample_mode = total - 1 > len(selected)
+    has_header = fmt != "csv_no_header"
+    header = rows[0] if has_header else []
+    selected = rows[1:] if has_header else rows[:limit]
+    sample_mode = total - int(has_header) > len(selected)
     return selected, header, {"mode": "sample" if sample_mode else "full",
-                              "sample_limit": limit, "rows_read": len(selected), "total_rows": max(0,total-1), "header_rows": 1,
+                              "sample_limit": limit, "rows_read": len(selected), "total_rows": max(0,total-int(has_header)), "header_rows": int(has_header),
                               "delimiter": delimiter, "quotechar": dialect.quotechar,
                               "quotechar_observed": bool(dialect.quotechar and dialect.quotechar in sample),
                               "delimiter_observed": bool(delimiter and delimiter in sample),
@@ -207,7 +208,7 @@ def _read_delimited(path: Path, fmt: str, limit: int) -> tuple[list[list[str]], 
 
 def _parse(path: Path, rel: str, fmt: str, limit: int, bag: dict) -> tuple[str, list[str]]:
     issues: list[str] = []
-    if fmt in {"csv", "tsv"}:
+    if fmt in {"csv", "tsv", "csv_no_header"}:
         rows, headers, cov = _read_delimited(path, fmt, limit)
         bag["parser"]["delimited_parser"] = {key: cov.get(key) for key in
                                               ("delimiter", "quotechar", "doublequote", "escapechar", "quoting", "dialect_basis")}
@@ -225,7 +226,12 @@ def _parse(path: Path, rel: str, fmt: str, limit: int, bag: dict) -> tuple[str, 
         if cov.get("quotechar_observed"):
             _fact(bag, "dataset", "quote_character", cov.get("quotechar"), "syntax", "observed", rel,
                   {"kind": "delimited_header_syntax", "row": 1}, cov.get("quotechar"), {"mode": "sample", "sample_limit_bytes": 8192})
-        for ri, row in enumerate(rows, 2):
+        if fmt == "csv_no_header":
+            for ci in range(max((len(row) for row in rows), default=0)):
+                _fact(bag, f"column:{ci+1}", "position", ci+1, "syntax", "observed", rel,
+                      {"kind": "delimited_cell", "row": 1, "column": ci+1},
+                      rows[0][ci] if ci < len(rows[0]) else "", {"mode": "sample", "rows_read": len(rows)})
+        for ri, row in enumerate(rows, 1 if fmt == "csv_no_header" else 2):
             for ci, val in enumerate(row):
                 _fact(bag, f"column:{ci+1}", "observed_lexical_value", val, "syntax", "observed", rel,
                       {"kind": "delimited_cell", "row": ri, "column": ci+1}, val,

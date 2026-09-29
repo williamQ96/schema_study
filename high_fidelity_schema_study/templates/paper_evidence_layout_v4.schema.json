@@ -1,0 +1,506 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-evidence-layout/v4",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "paper_id",
+    "source_pdf_sha256",
+    "preprocessing_profile",
+    "extractor",
+    "normalization",
+    "coordinate_system",
+    "span_conventions",
+    "page_count",
+    "region_count",
+    "table_count",
+    "layout_token_count",
+    "reading_text_sha256",
+    "pages",
+    "preprocessing_sha256",
+    "derived_from_v3_preprocessing_sha256",
+    "geometry_source"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "paper-evidence-layout/v4"
+    },
+    "paper_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_pdf_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "preprocessing_profile": {
+      "const": "frozen-pdf-words-spatial-table-v4"
+    },
+    "extractor": {
+      "type": "object"
+    },
+    "normalization": {
+      "type": "object"
+    },
+    "coordinate_system": {
+      "type": "string"
+    },
+    "span_conventions": {
+      "type": "object"
+    },
+    "page_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "region_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "table_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layout_token_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reading_text_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "preprocessing_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/page"
+      }
+    },
+    "derived_from_v3_preprocessing_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "geometry_source": {
+      "type": "object",
+      "required": [
+        "source",
+        "pdf_sha256",
+        "extractor",
+        "version"
+      ],
+      "properties": {
+        "source": {
+          "const": "same_sha256_pdf_horizontal_rules"
+        },
+        "pdf_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "extractor": {
+          "const": "pdfplumber"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "bbox": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "token": {
+      "type": "object",
+      "required": [
+        "text",
+        "region_char_span",
+        "source_word_index",
+        "bbox",
+        "document_token_index",
+        "document_char_span"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "region_char_span": {
+          "$ref": "#/$defs/span"
+        },
+        "source_word_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "document_token_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "document_char_span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    },
+    "region": {
+      "type": "object",
+      "required": [
+        "region_id",
+        "unit_id",
+        "page",
+        "region_kind",
+        "column_index",
+        "bbox",
+        "text",
+        "text_sha256",
+        "tokens",
+        "source_word_indexes",
+        "document_char_span",
+        "document_token_span",
+        "reading_order"
+      ],
+      "properties": {
+        "region_id": {
+          "type": "string"
+        },
+        "unit_id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "region_kind": {
+          "enum": [
+            "header",
+            "footer",
+            "body_column",
+            "body_full_width",
+            "table",
+            "recovered_source_text",
+            "table_unparsed",
+            "table_note"
+          ]
+        },
+        "column_index": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "text": {
+          "type": "string"
+        },
+        "text_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/token"
+          }
+        },
+        "source_word_indexes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "document_char_span": {
+          "$ref": "#/$defs/span"
+        },
+        "document_token_span": {
+          "$ref": "#/$defs/span"
+        },
+        "reading_order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "table_id": {
+          "type": "string"
+        },
+        "structure_status": {
+          "enum": [
+            "structure_uncertain"
+          ]
+        }
+      }
+    },
+    "cell": {
+      "type": "object",
+      "required": [
+        "unit_id",
+        "row_index",
+        "column_index",
+        "column_header",
+        "text",
+        "bbox",
+        "source_word_indexes",
+        "region_char_span",
+        "document_char_span",
+        "document_token_span"
+      ],
+      "properties": {
+        "unit_id": {
+          "type": "string"
+        },
+        "row_index": {
+          "type": "integer"
+        },
+        "column_index": {
+          "type": "integer"
+        },
+        "column_header": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "source_word_indexes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "region_char_span": {
+          "$ref": "#/$defs/span"
+        },
+        "document_char_span": {
+          "$ref": "#/$defs/span"
+        },
+        "document_token_span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "table_id",
+        "table_number",
+        "caption",
+        "bbox",
+        "detection_method",
+        "detection_status",
+        "caption_source_word_indexes",
+        "columns",
+        "rows",
+        "source_word_indexes",
+        "caption_unit",
+        "header_units"
+      ],
+      "properties": {
+        "table_id": {
+          "type": "string"
+        },
+        "table_number": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "detection_method": {
+          "type": "string"
+        },
+        "detection_status": {
+          "type": "string"
+        },
+        "caption_source_word_indexes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "row_id",
+              "unit_id",
+              "row_index",
+              "text",
+              "cells",
+              "region_char_span",
+              "document_char_span",
+              "document_token_span"
+            ],
+            "properties": {
+              "row_id": {
+                "type": "string"
+              },
+              "unit_id": {
+                "type": "string"
+              },
+              "row_index": {
+                "type": "integer"
+              },
+              "text": {
+                "type": "string"
+              },
+              "cells": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/cell"
+                }
+              },
+              "region_char_span": {
+                "$ref": "#/$defs/span"
+              },
+              "document_char_span": {
+                "$ref": "#/$defs/span"
+              },
+              "document_token_span": {
+                "$ref": "#/$defs/span"
+              }
+            }
+          }
+        },
+        "source_word_indexes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "caption_unit": {
+          "type": "object"
+        },
+        "header_units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/header_unit"
+          }
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "required": [
+        "page",
+        "width_points",
+        "height_points",
+        "layout_mode",
+        "source_word_count",
+        "regions",
+        "tables",
+        "source_words"
+      ],
+      "properties": {
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "width_points": {
+          "type": "number"
+        },
+        "height_points": {
+          "type": "number"
+        },
+        "layout_mode": {
+          "enum": [
+            "two_column",
+            "single_column_or_full_width"
+          ]
+        },
+        "source_word_count": {
+          "type": "integer"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/region"
+          }
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "source_words": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "spatial_split_x": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "header_unit": {
+      "type": "object",
+      "required": [
+        "unit_id",
+        "text",
+        "column_index",
+        "bbox",
+        "source_word_indexes",
+        "document_char_span",
+        "document_token_span"
+      ],
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "pattern": "^v4-"
+        },
+        "text": {
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "document_char_span": {
+          "$ref": "#/$defs/span"
+        },
+        "document_token_span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    }
+  }
+}

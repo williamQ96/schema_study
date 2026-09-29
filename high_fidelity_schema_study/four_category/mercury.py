@@ -17,17 +17,32 @@ from .common import ROOT, digest, file_digest, now, read_json, write_new
 from .workflow import experiment_errors, run_batch, tasks_for_config
 
 
-def code_identity() -> dict:
+def code_identity(root=None) -> dict:
     """Bind active source, not the Git HEAD of an often intentionally dirty checkout."""
-    paths = set(ROOT.glob('*.py'))
+    root = ROOT if root is None else Path(root)
+    paths = set(root.glob('*.py'))
     for directory in ('four_category', 'extractors'):
-        paths.update((ROOT / directory).rglob('*.py'))
-    paths.update((ROOT / 'templates').glob('four_category*'))
+        paths.update((root / directory).rglob('*.py'))
+    paths.update((root / 'templates').glob('four_category*'))
     for name in ('paper_to_schema_system_v4.txt', 'paper_to_schema_user_v4.txt',
-                 'paper_category_response_v1.schema.json', 'paper_derived_schema_v4.schema.json',
-                 'paper_evidence_input_v3.schema.json', 'paper_evidence_layout_v3.schema.json'):
-        paths.add(ROOT / 'templates' / name)
-    return {p.relative_to(ROOT).as_posix(): file_digest(p) for p in sorted(paths) if p.is_file()}
+                 'paper_to_schema_user_v5.txt',
+                 'paper_to_schema_system_v6.txt', 'paper_to_schema_user_v6.txt',
+                 'paper_extraction_observations_v5.schema.json',
+                 'paper_to_schema_system_v7.txt', 'paper_to_schema_user_v7.txt',
+                 'paper_extraction_observations_v6.schema.json',
+                 'paper_to_schema_system_v8.txt', 'paper_to_schema_user_v8.txt',
+                 'paper_extraction_observations_v7.schema.json',
+                 'paper_to_schema_system_v9.txt', 'paper_to_schema_user_v9.txt',
+                 'paper_extraction_observations_v9.schema.json',
+                 'paper_to_schema_system_v10.txt', 'paper_to_schema_user_v10.txt',
+                 'paper_extraction_observations_v10.schema.json',
+                 'paper_category_response_v1.schema.json', 'paper_category_response_v2.schema.json', 'paper_category_response_v3.schema.json', 'paper_derived_schema_v4.schema.json',
+                 'paper_evidence_input_v3.schema.json', 'paper_evidence_layout_v3.schema.json',
+                 'paper_evidence_input_v4.schema.json', 'paper_evidence_layout_v4.schema.json',
+                 'paper_evidence_input_v5.schema.json', 'paper_evidence_layout_v5.schema.json',
+                 'paper_evidence_input_v6.schema.json', 'paper_evidence_layout_v6.schema.json'):
+        paths.add(root / 'templates' / name)
+    return {p.relative_to(root).as_posix(): file_digest(p) for p in sorted(paths) if p.is_file()}
 
 
 def parameter_errors(config: dict) -> list[str]:

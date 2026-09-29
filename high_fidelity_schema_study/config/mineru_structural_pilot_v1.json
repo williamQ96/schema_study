@@ -1,0 +1,29 @@
+{
+  "schema_version": "mineru-structural-development-plan/v1",
+  "purpose": "Bounded 2x2 development comparison, not independent semantic evaluation or a production cohort run",
+  "paper_ids": ["P05", "P06", "P07"],
+  "parser": {"version": "4.0.8", "docvortex_version": "0.5.2", "tier": "basic", "small_backend": "onnx", "ocr_mode": "txt"},
+  "cases": [
+    {"case_id": "P05-data-description", "paper_id": "P05", "page": 5, "anchor": "each record includes", "reason": "Hourly/daily dataset variables in narrative prose"},
+    {"case_id": "P05-event-table", "paper_id": "P05", "page": 10, "anchor": "Table 4 Detected Events after verification", "reason": "Event-result table beside unrelated figure/prose; field-scope negative control"},
+    {"case_id": "P06-feature-definition", "paper_id": "P06", "page": 4, "anchor": "Perimeter", "reason": "Explicit feature definition in multi-column prose"},
+    {"case_id": "P06-feature-statistics", "paper_id": "P06", "page": 8, "anchor": "Table 4 Statistical data on the properties obtained", "reason": "Feature rows versus statistical descriptor columns and internal rules"},
+    {"case_id": "P07-class-values", "paper_id": "P07", "page": 3, "anchor": "Barhee", "reason": "Class values, geographic descriptions and study objects must retain different roles"},
+    {"case_id": "P07-feature-table", "paper_id": "P07", "page": 4, "anchor": "Morphological features", "reason": "Previously unresolved table structure and adjacent class-description material"}
+  ],
+  "conditions": [
+    {"condition_id": "M0A0", "mineru_enabled": false, "auxiliary_enabled": false},
+    {"condition_id": "M1A0", "mineru_enabled": true, "auxiliary_enabled": false},
+    {"condition_id": "M0A1", "mineru_enabled": false, "auxiliary_enabled": true},
+    {"condition_id": "M1A1", "mineru_enabled": true, "auxiliary_enabled": true}
+  ],
+  "primary_extraction_slot": "qwen",
+  "auxiliary_slot": "muse",
+  "repetitions": 1,
+  "seed": 20260927,
+  "extraction_parameters": {"max_output_tokens": 16384, "do_sample": false, "repetition_penalty": 1.0, "seed": 20260927},
+  "auxiliary_parameters": {"max_output_tokens": 16384, "do_sample": false, "repetition_penalty": 1.0, "seed": 20260927},
+  "selection_rule": "For each declared page and whitespace/punctuation-normalized anchor, prefer recognized units over native recovery; select the deterministic v10 group containing its first matching window. Absence blocks that case rather than choosing after seeing model outputs. Classify the structural group containing each anchor unit; this includes its whole table when recognized. Declare other groups unreviewed. Caption anchors were made specific during preflight to avoid accidentally selecting prose that discusses the table.",
+  "limits": {"max_extraction_calls": 24, "max_auxiliary_calls": 24, "maintenance_seconds": 3600},
+  "interpretation": "One seed and one primary extraction model characterize this implementation pilot only. Shared helper bias, different parser segmentation, CPU Basic tier, selected development cases and missing independent gold limit accuracy claims. Original PDFs and whole-document evidence remain available in every extraction request. No dataset facts enter paper requests."
+}

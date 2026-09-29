@@ -1,0 +1,2 @@
+# Optional local constrained decoding; installed explicitly in four-category images.
+xgrammar==0.2.8

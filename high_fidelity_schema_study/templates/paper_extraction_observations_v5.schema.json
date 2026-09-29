@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-extraction-group-response/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "coverage", "mentions", "facts"],
+  "properties": {
+    "schema_version": {"const": "paper-extraction-group-response/v1"},
+    "coverage": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["window_id", "state"], "properties": {"window_id": {"type": "string"}, "state": {"enum": ["reviewed", "uncertain", "overflow"]}}}},
+    "mentions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["kind", "name", "name_anchor", "context"], "properties": {"kind": {"enum": ["dataset", "table", "group", "array", "record", "variable", "field", "dimension"]}, "name": {"type": "string", "minLength": 1}, "name_anchor": {"$ref": "#/$defs/anchor"}, "context": {"type": ["string", "null"]}}}},
+    "facts": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["subject_mention", "predicate", "value", "status", "basis", "categories", "primary_anchor", "support_anchors", "target"], "properties": {"subject_mention": {"type": "integer", "minimum": 0}, "predicate": {"enum": ["reported_name", "canonical_path", "parent", "datatype", "shape", "description", "unit", "value_domain", "spatial_meaning", "temporal_meaning", "analytical_role", "constraint", "encoding", "syntax", "relationship", "same_as"]}, "value": {"type": ["string", "null"]}, "status": {"enum": ["reported", "inferred", "unknown"]}, "basis": {"type": ["string", "null"]}, "categories": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["structure", "encoding", "value", "syntax"]}}, "primary_anchor": {"$ref": "#/$defs/anchor"}, "support_anchors": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/anchor"}}, "target": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["kind", "name", "anchor"], "properties": {"kind": {"enum": ["dataset", "table", "group", "array", "record", "variable", "field", "dimension"]}, "name": {"type": "string", "minLength": 1}, "anchor": {"$ref": "#/$defs/anchor"}}}]}}}}
+  },
+  "$defs": {"anchor": {"type": "object", "additionalProperties": false, "required": ["unit_id", "quote_id"], "properties": {"unit_id": {"type": "string"}, "quote_id": {"type": "string", "pattern": "^q[0-9]{4}$"}}}}
+}

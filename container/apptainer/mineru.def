@@ -1,0 +1,37 @@
+Bootstrap: docker
+From: {{ PYTHON_IMAGE }}
+
+%arguments
+    PYTHON_IMAGE=python:3.12-slim-bookworm
+
+%files
+    requirements_mineru.txt /opt/requirements/requirements_mineru.txt
+
+%post
+    set -eu
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends ca-certificates libgomp1 libglib2.0-0 libgl1
+    rm -rf /var/lib/apt/lists/*
+    python -m venv /opt/mineru-venv
+    /opt/mineru-venv/bin/python -m pip install --no-cache-dir -r /opt/requirements/requirements_mineru.txt
+    /opt/mineru-venv/bin/python -m pip check
+    /opt/mineru-venv/bin/python -m pip freeze --all > /opt/requirements/pip-freeze.txt
+
+%environment
+    export PATH=/opt/mineru-venv/bin:$PATH
+    export PYTHONPATH=/workspace
+    export PYTHONDONTWRITEBYTECODE=1
+    export PYTHONNOUSERSITE=1
+    export PYTHONUNBUFFERED=1
+    export HF_HOME=/cache/huggingface
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    export CUDA_VISIBLE_DEVICES=
+
+%runscript
+    exec /opt/mineru-venv/bin/python -m high_fidelity_schema_study.four_category.mineru_runner "$@"
+
+%test
+    /opt/mineru-venv/bin/python -m pip check
+    /opt/mineru-venv/bin/python -c 'import importlib.metadata as m; import onnxruntime; assert m.version("mineru") == "4.0.8"; assert m.version("docvortex") == "0.5.2"; assert m.version("onnxruntime") == "1.30.0"'

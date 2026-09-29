@@ -1,0 +1,59 @@
+{
+  "schema_version": "fidelity-development-replay-config/v1",
+  "pilot_root": "data/experiments/mineru_structural_2026_09_27_v1",
+  "artifact_manifest_file_bytes_sha256": "38b68d68cc280b37dd2ce4ea79ad2cfac124a4f9beca4c03cc36547971478ede",
+  "dataset_bindings": [
+    {
+      "schema_version": "dataset-scope-binding/v1",
+      "paper_id": "P05",
+      "resources": [
+        {
+          "scope_id": "P05::bike_day",
+          "evidence_path": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle/dataset_evidence/P05/bike_day.json",
+          "evidence_file_bytes_sha256": "3a003c23e9a98b516161de7d88ccbe97f06c5ee6ba2cc6b047bea32181d18ab5",
+          "source_root": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle",
+          "sheet": null,
+          "field_roles": {}
+        },
+        {
+          "scope_id": "P05::bike_hour",
+          "evidence_path": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle/dataset_evidence/P05/bike_hour.json",
+          "evidence_file_bytes_sha256": "cc001eb92053c2fa3d0d365f0a57bec6ebd0dae6eef7b049b864352860e120a5",
+          "source_root": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle",
+          "sheet": null,
+          "field_roles": {}
+        }
+      ]
+    },
+    {
+      "schema_version": "dataset-scope-binding/v1",
+      "paper_id": "P06",
+      "resources": [
+        {
+          "scope_id": "P06::raisin",
+          "evidence_path": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle/dataset_evidence/P06/raisin.json",
+          "evidence_file_bytes_sha256": "a926aa32b68db8078bd16b621fcf4bf5545192964eba30e72763df2ac64f2462",
+          "source_root": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle",
+          "sheet": "Raisin_Dataset",
+          "field_roles": {}
+        }
+      ]
+    },
+    {
+      "schema_version": "dataset-scope-binding/v1",
+      "paper_id": "P07",
+      "resources": [
+        {
+          "scope_id": "P07::date_fruit",
+          "evidence_path": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle/dataset_evidence/P07/date_fruit.json",
+          "evidence_file_bytes_sha256": "018e5bb3725a122674c1904c8f88e00cae17f750eb284b295ec390b86f952745",
+          "source_root": "data/experiments/mercury_spatial_layout_2026_09_27_v4/candidate-06-v5-runtime/source_bundle",
+          "sheet": "Date_Fruit_Datasets",
+          "field_roles": {}
+        }
+      ]
+    }
+  ],
+  "scope_basis": "Same data-bearing sheets/tables as frozen cohort reference; targets and predictors retained; unknown roles not inferred.",
+  "semantic_gold_status": "not_established"
+}

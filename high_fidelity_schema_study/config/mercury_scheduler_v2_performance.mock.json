@@ -1,0 +1,44 @@
+{
+  "schema_version": "mercury-scheduler-v2-performance-config/v1",
+  "created_at": "2026-09-28T00:00:00Z",
+  "required_parameters": ["max_output_tokens", "temperature"],
+  "grammar_required": true,
+  "seed_required": true,
+  "factors": {"concurrency": [1, 2, 4], "prefix_cache": [false, true], "gpu_count": [1, 2]},
+  "baseline_profile": {
+    "profile_id": "REPLACE_WITH_FROZEN_BASELINE_PROFILE_ID",
+    "backend": "transformers",
+    "engine": "REPLACE_WITH_TRANSFORMERS_RUNTIME_VERSION",
+    "image": "REPLACE_WITH_BASELINE_IMAGE@sha256:REPLACE_WITH_64_HEX_DIGEST",
+    "image_sha256": "REPLACE_WITH_BASELINE_IMAGE_SHA256",
+    "revision": "REPLACE_WITH_FULL_40_OR_64_HEX_MODEL_REVISION",
+    "checkpoint_identity": "REPLACE_WITH_BASELINE_CHECKPOINT_SHA256",
+    "model_id": "REPLACE_WITH_BASELINE_MODEL_ID",
+    "tokenizer_id": "REPLACE_WITH_BASELINE_TOKENIZER_ID@FULL_40_OR_64_HEX_REVISION"
+  },
+  "models": [{
+    "profile_id": "offline-mock-v1",
+    "backend": "mock",
+    "engine": "test-harness-only",
+    "image": "mock-fixture-image",
+    "image_sha256": "mock-fixture-image-digest",
+    "revision": "mock-fixture-revision",
+    "checkpoint_identity": "mock-fixture-checkpoint",
+    "model_id": "offline-mock-model",
+    "tokenizer_id": "offline-mock-tokenizer",
+    "supports_seed": true,
+    "supports_grammar": true,
+    "supported_parameters": ["max_output_tokens", "temperature", "seed"]
+  }],
+  "frozen_requests": [{
+    "request_id": "mock-request-1",
+    "input": {"document_id": "offline-fixture"},
+    "task": "mock-only-contract-check",
+    "messages": [{"role": "user", "content": "offline mock input"}],
+    "seed": 12345,
+    "generation_parameters": {"max_output_tokens": 128, "temperature": 0, "seed": 12345},
+    "longest_context": true,
+    "dense_table": true,
+    "prior_failure_tags": ["mock-only"]
+  }]
+}
