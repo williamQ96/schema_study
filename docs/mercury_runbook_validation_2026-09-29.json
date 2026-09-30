@@ -1,0 +1,56 @@
+{
+  "schema_version": "mercury-runbook-validation/v1",
+  "documentation_date": "2026-09-29",
+  "timezone": "America/Los_Angeles",
+  "validated_runtime_source_commit": "25daf4762d9c38c43d666e1d95a18036262513f9",
+  "guide_file_bytes_sha256": "48dd75583d9e118a2b7d30cbb8d2e17ff248a10cd38bb694b63d5999dcf81221",
+  "host": "mercury.nic.uoregon.edu",
+  "cpu_environment": "existing Python 3.12 control virtual environment; no new CUDA environment installed",
+  "shell_syntax": {
+    "blocks": 40,
+    "status": "pass"
+  },
+  "python_syntax": {
+    "embedded_programs": 7,
+    "status": "pass"
+  },
+  "cpu_regression_tests": {
+    "passed": 18,
+    "failed": 0,
+    "files": [
+      "test_scheduler_v2_cli.py",
+      "test_scheduler_v2_bootstrap.py",
+      "test_scheduler_v2_policy.py"
+    ]
+  },
+  "executed_examples": [
+    "host offline demo",
+    "fresh mock condition and deployment",
+    "V2 CPU bootstrap",
+    "deployment pin verification",
+    "background V2 supervisor/coordinator/mock workers",
+    "automatic packet finalization",
+    "independent V2 packet byte and derivation replay",
+    "native PDF and CSV source/corpus builder using synthetic files",
+    "grouped tutorial base configuration",
+    "explicit deferred mock reference catalog"
+  ],
+  "mock_packet": {
+    "finalization": "pass",
+    "byte_integrity": "pass",
+    "derivation_validity": "pass",
+    "semantic_accuracy": null
+  },
+  "live_model_calls": 0,
+  "validation_background_processes": "owned supervisor/coordinator/watchdog and mock workers stopped after validation",
+  "historical_queues": "not restarted or modified",
+  "not_executed": [
+    "fresh Apptainer installation",
+    "OCI pull or image build",
+    "checkpoint download",
+    "live capacity qualification",
+    "real paper-model inference",
+    "Telegram notifications"
+  ],
+  "qualification_scope": "software and documentation checks only; no hardware/output/fidelity qualification"
+}

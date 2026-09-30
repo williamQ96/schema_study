@@ -26,8 +26,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 6056,
-      "sha256_file_bytes": "f1aa966ceb11414034ef75e3c5a863a2a5617b82f86cf00f211238a3ce3d831f"
+      "bytes": 6230,
+      "sha256_file_bytes": "7da10910e4b6381f2048a6aae2ab38b00c87a4ee7779ac363b0aad01622be876"
     },
     {
       "path": "README.zh-CN.md",
@@ -98,6 +98,16 @@
       "path": "docs/dataset_four_category_architecture.md",
       "bytes": 2958,
       "sha256_file_bytes": "2f00ac7f59dda112be24065ea5bd8304978bf31f1af2b63f0810717a0f507cfb"
+    },
+    {
+      "path": "docs/mercury_runbook.md",
+      "bytes": 55452,
+      "sha256_file_bytes": "48dd75583d9e118a2b7d30cbb8d2e17ff248a10cd38bb694b63d5999dcf81221"
+    },
+    {
+      "path": "docs/mercury_runbook_validation_2026-09-29.json",
+      "bytes": 1930,
+      "sha256_file_bytes": "0cd14d0e0589eef1982d2f6ac67e05fd885893b4005af7789dd0911d4a27e7b9"
     },
     {
       "path": "docs/release-validation-v0.1.0.json",

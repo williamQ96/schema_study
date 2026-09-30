@@ -16,6 +16,7 @@ The paper workflow retains the full layout-aware text and freezes a shared class
 
 | Task | Documentation |
 | --- | --- |
+| Run on Mercury from environment setup through Scheduler V2, monitoring and result collection | [Mercury runbook with complete command sequences](docs/mercury_runbook.md) |
 | Run the demo, prepare paper/dataset inputs, build a corpus, run jobs and verify packets | [User guide](docs/schema_study_user_guide.md) |
 | Deploy on Mercury, obtain a Docker/Apptainer image, select models and freeze a configuration | [Deployment guide](docs/schema_study_deployment_guide.md) |
 | Read the documentation in Chinese | [中文首页](README.zh-CN.md) · [使用指南](docs/schema_study_user_guide_zh.md) · [部署指南](docs/schema_study_deployment_guide_zh.md) |
